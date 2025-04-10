@@ -1,140 +1,138 @@
 import streamlit as st
-import datetime
 import pandas as pd
-import os
+from fpdf import FPDF
 from PIL import Image
+from datetime import datetime
 
-# Funções auxiliares para salvar e carregar dados por usuário
-def get_user_file(user):
-    return f"dados_{user}.csv"
+# -------------------- CONFIG GERAL --------------------
+st.set_page_config(
+    page_title="Café du Contrôle ☕",
+    page_icon=":coffee:",
+    layout="wide"
+)
 
-def carregar_dados(usuario):
-    arquivo = get_user_file(usuario)
-    if os.path.exists(arquivo):
-        return pd.read_csv(arquivo)
-    else:
-        return pd.DataFrame(columns=["Data", "Tipo", "Categoria", "Descrição", "Valor"])
-
-def salvar_dados(usuario, dados):
-    arquivo = get_user_file(usuario)
-    dados.to_csv(arquivo, index=False)
-
-# Autenticação simples (mock)
-usuarios = {"mayara": "1234", "convidado": "teste"}
-
-if "usuario_autenticado" not in st.session_state:
-    st.session_state.usuario_autenticado = None
-
-if st.session_state.usuario_autenticado is None:
-    st.title("Café du Contrôle ☕")
-    st.subheader("Faça login para acessar seu controle financeiro")
-    usuario = st.text_input("Usuário")
-    senha = st.text_input("Senha", type="password")
-    if st.button("Entrar"):
-        if usuario in usuarios and usuarios[usuario] == senha:
-            st.session_state.usuario_autenticado = usuario
-            st.success(f"Bem-vinda, {usuario}!")
-            st.rerun()
-        else:
-            st.error("Usuário ou senha incorretos")
-else:
-    usuario = st.session_state.usuario_autenticado
-    st.sidebar.image("logo-cafe.png", use_column_width=True)
-    st.sidebar.markdown("""
+# -------------------- FUNÇÃO: FUNDO --------------------
+def set_background_from_url(image_url):
+    st.markdown(
+        f"""
         <style>
-            .sidebar .sidebar-content {
-                background-color: #f5f5dc;
-                color: #333333;
-            }
-            .css-1v0mbdj p, .css-1v0mbdj label {
-                color: #333333 !important;
-            }
+        .stApp {{
+            background-image: url("{image_url}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        .block-container {{
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }}
+        .main > div {{
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 12px;
+        }}
+        h1, h2, h3 {{
+            color: #fefefe !important;
+            text-shadow: 1px 1px 4px #000000cc;
+        }}
+        .stMarkdown, .stTextInput > label, .stNumberInput > label {{
+            color: #fdfdfd !important;
+        }}
         </style>
-    """, unsafe_allow_html=True)
-    st.sidebar.title("Menu")
-    aba = st.sidebar.radio("Ir para:", ["Lançamentos", "Dashboard", "Relatórios"])
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.markdown("""
-        <style>
-            .titulo {
-                font-size: 28px;
-                color: white;
-                margin-top: 20px;
-            }
-            .subtitulo {
-                font-size: 22px;
-                color: white;
-                margin-top: 10px;
-            }
-            .saldo-container {
-                background-color: rgba(255, 255, 0, 0.25);
-                border-radius: 10px;
-                padding: 15px;
-                margin-top: 15px;
-            }
-            .saldo-text {
-                color: #222;
-                font-weight: bold;
-                font-size: 20px;
-                text-align: center;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-    dados = carregar_dados(usuario)
-
-    if aba == "Lançamentos":
-        st.markdown("<div class='titulo'>Lançamentos do Dia</div>", unsafe_allow_html=True)
-
-        with st.form("form_lancamento"):
-            col1, col2 = st.columns(2)
-            with col1:
-                data = st.date_input("Data", value=datetime.date.today())
-                tipo = st.selectbox("Tipo", ["Entrada", "Gasto"])
-                categoria = st.text_input("Categoria")
-            with col2:
-                descricao = st.text_input("Descrição")
-                valor = st.number_input("Valor (R$)", min_value=0.0, step=0.01)
-
-            enviado = st.form_submit_button("Adicionar")
-
-            if enviado:
-                novo = pd.DataFrame([[data, tipo, categoria, descricao, valor]], columns=dados.columns)
-                dados = pd.concat([dados, novo], ignore_index=True)
-                salvar_dados(usuario, dados)
-                st.success("Lançamento adicionado com sucesso!")
-
-    elif aba == "Dashboard":
-        st.markdown("<div class='titulo'>Resumo do Dia</div>", unsafe_allow_html=True)
-        hoje = datetime.date.today().strftime('%Y-%m-%d')
-        dados_dia = dados[dados["Data"] == hoje]
-
-        total_entradas = dados_dia[dados_dia["Tipo"] == "Entrada"]["Valor"].sum()
-        total_gastos = dados_dia[dados_dia["Tipo"] == "Gasto"]["Valor"].sum()
-        saldo = total_entradas - total_gastos
-
-        st.markdown(f"<div class='subtitulo'>Entradas: R$ {total_entradas:.2f}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='subtitulo'>Gastos: R$ {total_gastos:.2f}</div>", unsafe_allow_html=True)
-
-        st.markdown(f"""
-            <div class='saldo-container'>
-                <div class='saldo-text'>Saldo do Dia: R$ {saldo:.2f}</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        if saldo < 0:
-            st.error("Tá plantando dinheiro, né linda?")
-        elif saldo > 0:
-            st.success("Vou começar a te chamar de Senhora... e com voz aveludada!")
-        else:
-            st.info("Equilibrou o jogo hoje!")
-
-    elif aba == "Relatórios":
-        st.markdown("<div class='titulo'>Relatórios</div>", unsafe_allow_html=True)
-        st.dataframe(dados)
-
-    st.markdown("""
-        <div style='text-align: center; margin-top: 50px;'>
-            <img src='logo-cafe.png' width='120'>
+# -------------------- LOGOS --------------------
+with st.container():
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
+            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="140" style="margin-top: -10px;">
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
+
+# -------------------- SIDEBAR / MENU --------------------
+menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Gerar PDF", "Ajuda ☕"])
+
+# -------------------- RESUMO DIÁRIO --------------------
+if menu == "Resumo Diário":
+    st.header("💰 Entradas")
+    salario = st.number_input("Salário", min_value=0.0, step=100.0)
+    renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
+    total_entradas = salario + renda_extra
+
+    st.header("💸 Gastos")
+    fixos = st.number_input("Gastos Fixos", min_value=0.0, step=100.0)
+    extras = st.number_input("Gastos Variáveis", min_value=0.0, step=50.0)
+    total_saidas = fixos + extras
+
+    saldo = total_entradas - total_saidas
+    hoje = datetime.now().strftime("%d/%m/%Y")
+
+    st.header("📊 Resumo do Dia")
+    st.markdown(f"**Data:** {hoje}")
+    st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
+    st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
+
+    if saldo > 0:
+        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
+        st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
+    elif saldo < 0:
+        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
+        st.caption("Tá plantando dinheiro, né linda?")
+    else:
+        st.warning("Zerada. Saldo: R$ 0,00")
+        st.caption("Café preto e foco!")
+
+# -------------------- HISTÓRICO MENSAL --------------------
+elif menu == "Histórico Mensal":
+    st.header("📅 Histórico Mensal")
+    st.info("Em breve: você poderá visualizar um resumo de seus lançamentos por mês, com gráficos lindos no tema outonal. 🍂")
+
+# -------------------- GERAR PDF --------------------
+elif menu == "Gerar PDF":
+    st.header("📄 Gerar Relatório em PDF")
+
+    nome = st.text_input("Seu nome:")
+    entradas_pdf = st.number_input("Entradas (R$)", key="pdf_entrada")
+    saidas_pdf = st.number_input("Saídas (R$)", key="pdf_saida")
+    saldo_pdf = entradas_pdf - saidas_pdf
+
+    if st.button("📥 Baixar PDF"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=14)
+        pdf.cell(200, 10, txt="Relatório Financeiro - Café du Contrôle ☕", ln=True, align="C")
+        pdf.ln(10)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt=f"Nome: {nome}", ln=True)
+        pdf.cell(200, 10, txt=f"Entradas: R$ {entradas_pdf:,.2f}", ln=True)
+        pdf.cell(200, 10, txt=f"Saídas: R$ {saidas_pdf:,.2f}", ln=True)
+        pdf.cell(200, 10, txt=f"Saldo: R$ {saldo_pdf:,.2f}", ln=True)
+
+        pdf_output = "relatorio.pdf"
+        pdf.output(pdf_output)
+
+        with open(pdf_output, "rb") as file:
+            st.download_button("📄 Clique para baixar seu PDF", file, file_name="relatorio_financeiro.pdf")
+
+# -------------------- AJUDA --------------------
+elif menu == "Ajuda ☕":
+    st.header("❓ Ajuda e Dicas")
+    st.markdown("""
+    - **Resumo Diário**: preencha suas entradas e gastos para ver seu saldo.
+    - **Histórico Mensal**: em breve você poderá visualizar seu progresso mês a mês.
+    - **Gerar PDF**: baixe um relatório com seu nome e saldos.
+    - Para dúvidas, fale com a equipe da ÉdenMachine. ✨
+    """)
+
+# -------------------- RODAPÉ --------------------
+st.markdown("---")
+st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
