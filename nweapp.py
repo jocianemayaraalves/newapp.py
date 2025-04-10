@@ -1,3 +1,21 @@
+import streamlit as st
+
+st.markdown("""
+    <style>
+    html, body, [data-testid="stApp"] {
+        background-image: url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe-fundo.jpg");
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        color: #3b2e2a;
+        font-family: 'Georgia', serif;
+    }
+
+    ...
+    </style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
     <style>
     html, body, [data-testid="stApp"] {
