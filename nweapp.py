@@ -208,7 +208,7 @@ if authentication_status:
     # -------------------- AJUDA --------------------
     elif menu == "Ajuda ☕":
         st.header("❓ Ajuda e Dicas")
-        st.markdown("""
+        st.markdown("""  
         - **Resumo Diário**: registre entradas e gastos do dia.
         - **Relatórios**: veja seus lançamentos anteriores.
         - **Gerar PDF**: baixe relatórios com gráficos.
