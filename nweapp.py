@@ -1,32 +1,32 @@
 import streamlit as st
 
-# CSS para colocar o fundo bonito sem atrapalhar o conteúdo
 st.markdown("""
     <style>
-    html, body, [data-testid="stApp"] {
-        background-image: url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/fundo-cafe-anime.jpg");
+    /* BACKGROUND FIX - imagem de fundo no body sem sobrepor o conteúdo */
+    body {
+        background-image: url('https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/fundo-cafe-anime.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         background-repeat: no-repeat;
     }
 
-    /* Fundo de cada bloco de conteúdo */
-    .stApp {
+    /* Cria uma camada semi-transparente no app para leitura */
+    [data-testid="stAppViewContainer"] {
         background-color: rgba(255, 255, 255, 0.85);
         padding: 1rem;
-        border-radius: 12px;
+        border-radius: 0.5rem;
     }
 
-    /* Ajuste visual dos inputs e botões */
+    /* Melhora campos de entrada */
     .stTextInput>div>div>input,
     .stNumberInput>div>div>input,
     .stDateInput>div>input,
     .stSelectbox>div>div>div {
-        background-color: rgba(255, 255, 255, 0.9);
+        background-color: rgba(255, 255, 255, 0.95);
         border-radius: 10px;
         padding: 0.3em;
-        border: 1px solid #e0c3a0;
+        border: 1px solid #dcbfa8;
     }
 
     .stButton>button {
