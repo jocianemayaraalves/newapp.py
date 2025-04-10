@@ -7,38 +7,47 @@ st.set_page_config(page_title="Café du Contrôle", page_icon="☕", layout="cen
 # --- Estilo customizado ---
 st.markdown("""
     <style>
-    html, body {
-        font-family: 'Georgia', serif;
-        background-color: #fdf6f0;
+    html, body, [data-testid="stApp"] {
+        background-color: #f4ebe2;
         color: #3b2e2a;
+        font-family: 'Georgia', serif;
     }
 
     .title {
         text-align: center;
         font-size: 38px;
-        color: #8b5e3c;
+        color: #7b4b2a;
         margin-bottom: 20px;
     }
 
     .stButton>button {
-        background-color: #ffad60;
+        background-color: #dc9c68;
         color: white;
         border: none;
         border-radius: 12px;
         padding: 0.5em 1em;
         font-weight: bold;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
     }
 
     .stButton>button:hover {
-        background-color: #e29450;
+        background-color: #c78555;
         color: #fff;
     }
 
     .stTextInput>div>div>input,
-    .stSelectbox>div>div>div {
+    .stSelectbox>div>div>div,
+    .stNumberInput>div>div>input {
         background-color: #fff7ee;
+        border: 1px solid #e0c3a0;
         border-radius: 10px;
         padding: 0.25em;
+    }
+
+    .stDataFrame {
+        background-color: #fffaf3;
+        border-radius: 15px;
+        padding: 1em;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -102,7 +111,7 @@ if not st.session_state.data.empty:
     )
 
     grafico.update_layout(
-        paper_bgcolor='#fdf6f0',
+        paper_bgcolor='#f4ebe2',
         font=dict(color="#3b2e2a", family="Georgia"),
         title_font=dict(size=20),
         legend_title_text='Tipo de Movimento'
