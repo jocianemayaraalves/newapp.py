@@ -3,6 +3,8 @@ import pandas as pd
 from fpdf import FPDF
 from PIL import Image
 from datetime import datetime
+import matplotlib.pyplot as plt
+import io
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
@@ -46,6 +48,10 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
+# -------------------- DADOS --------------------
+if 'relatorios' not in st.session_state:
+    st.session_state['relatorios'] = []
+
 # -------------------- LOGOS --------------------
 with st.container():
     st.markdown(
@@ -56,6 +62,7 @@ with st.container():
         """,
         unsafe_allow_html=True
     )
+    data_custom = st.date_input("Selecione a data do lançamento:", value=datetime.today())
 
 # -------------------- SIDEBAR / MENU --------------------
 menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Gerar PDF", "Ajuda ☕"])
@@ -73,10 +80,9 @@ if menu == "Resumo Diário":
     total_saidas = fixos + extras
 
     saldo = total_entradas - total_saidas
-    hoje = datetime.now().strftime("%d/%m/%Y")
 
     st.header("📊 Resumo do Dia")
-    st.markdown(f"**Data:** {hoje}")
+    st.markdown(f"**Data:** {data_custom.strftime('%d/%m/%Y')}")
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
 
@@ -90,6 +96,15 @@ if menu == "Resumo Diário":
         st.warning("Zerada. Saldo: R$ 0,00")
         st.caption("Café preto e foco!")
 
+    if st.button("💾 Salvar relatório do dia"):
+        st.session_state.relatorios.append({
+            "data": data_custom,
+            "entradas": total_entradas,
+            "saidas": total_saidas,
+            "saldo": saldo
+        })
+        st.success("Relatório salvo com sucesso!")
+
 # -------------------- HISTÓRICO MENSAL --------------------
 elif menu == "Histórico Mensal":
     st.header("📅 Histórico Mensal")
@@ -99,28 +114,43 @@ elif menu == "Histórico Mensal":
 elif menu == "Gerar PDF":
     st.header("📄 Gerar Relatório em PDF")
 
-    nome = st.text_input("Seu nome:")
-    entradas_pdf = st.number_input("Entradas (R$)", key="pdf_entrada")
-    saidas_pdf = st.number_input("Saídas (R$)", key="pdf_saida")
-    saldo_pdf = entradas_pdf - saidas_pdf
+    data_inicio = st.date_input("Data inicial:", value=datetime.today())
+    data_fim = st.date_input("Data final:", value=datetime.today())
 
-    if st.button("📥 Baixar PDF"):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=14)
-        pdf.cell(200, 10, txt="Relatório Financeiro - Café du Contrôle ☕", ln=True, align="C")
-        pdf.ln(10)
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt=f"Nome: {nome}", ln=True)
-        pdf.cell(200, 10, txt=f"Entradas: R$ {entradas_pdf:,.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Saídas: R$ {saidas_pdf:,.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Saldo: R$ {saldo_pdf:,.2f}", ln=True)
+    dados_filtrados = [r for r in st.session_state.relatorios if data_inicio <= r['data'] <= data_fim]
 
-        pdf_output = "relatorio.pdf"
-        pdf.output(pdf_output)
+    if dados_filtrados:
+        df = pd.DataFrame(dados_filtrados)
+        st.subheader("📈 Gráficos")
 
-        with open(pdf_output, "rb") as file:
-            st.download_button("📄 Clique para baixar seu PDF", file, file_name="relatorio_financeiro.pdf")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Entradas vs Saídas (Pizza)**")
+            total_entradas = df['entradas'].sum()
+            total_saidas = df['saidas'].sum()
+            fig1, ax1 = plt.subplots()
+            ax1.pie([total_entradas, total_saidas], labels=['Entradas', 'Saídas'], autopct='%1.1f%%')
+            st.pyplot(fig1)
+
+        with col2:
+            st.markdown("**Saldo ao longo do tempo (Linha)**")
+            fig2, ax2 = plt.subplots()
+            ax2.plot(df['data'], df['saldo'], marker='o', linestyle='-')
+            ax2.set_title("Evolução do Saldo")
+            ax2.set_ylabel("Saldo")
+            plt.xticks(rotation=45)
+            st.pyplot(fig2)
+
+        st.subheader("📌 Informações Inteligentes")
+        st.markdown(f"**Saldo médio:** R$ {df['saldo'].mean():,.2f}")
+        melhor_dia = df.loc[df['saldo'].idxmax()]
+        st.markdown(f"**Dia mais lucrativo:** {melhor_dia['data'].strftime('%d/%m/%Y')} (R$ {melhor_dia['saldo']:,.2f})")
+        pior_dia = df.loc[df['saldo'].idxmin()]
+        st.markdown(f"**Dia mais crítico:** {pior_dia['data'].strftime('%d/%m/%Y')} (R$ {pior_dia['saldo']:,.2f})")
+
+    else:
+        st.warning("Nenhum dado encontrado para o período selecionado.")
 
 # -------------------- AJUDA --------------------
 elif menu == "Ajuda ☕":
@@ -133,13 +163,10 @@ elif menu == "Ajuda ☕":
     """)
 
 # -------------------- RODAPÉ --------------------
-st.markdown("---", unsafe_allow_html=True)
-st.markdown(
-    """
-    <div style='text-align: center;'>
-        <p style='font-size: 11px; margin-bottom: 4px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></p>
-        <img src='https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png' width='100'>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<hr>
+<div style="text-align: center;">
+    <small style="font-size: 10px;">☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+    <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="70">
+</div>
+""", unsafe_allow_html=True)
