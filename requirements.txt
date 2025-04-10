@@ -3,3 +3,4 @@ pandas
 fpdf
 Pillow
 matplotlib
+plotly
