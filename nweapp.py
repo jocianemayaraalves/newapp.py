@@ -1,93 +1,76 @@
 import streamlit as st
-from PIL import Image
-from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime
 from fpdf import FPDF
-import os
+from PIL import Image
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
     page_title="Café du Contrôle ☕",
     page_icon=":coffee:",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# -------------------- FUNÇÕES --------------------
-def set_background_from_url(image_url):
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url('{image_url}');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+# -------------------- FUNÇÕES AUXILIARES --------------------
+def gerar_pdf(data, entradas, saidas, saldo):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Relatório Financeiro", ln=True, align="C")
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Data: {data}", ln=True)
+    pdf.cell(200, 10, txt=f"Total de Entradas: R$ {entradas:,.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Total de Gastos: R$ {saidas:,.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Saldo: R$ {saldo:,.2f}", ln=True)
+    return pdf
 
-# Define imagem de fundo
-set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
-
-# Carrega ou inicializa o histórico
-if "historico" not in st.session_state:
-    st.session_state.historico = []
-
-# -------------------- ESTILOS --------------------
+# -------------------- ESTILO --------------------
 st.markdown("""
-    <style>
-        .sidebar .sidebar-content {{
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }}
-        .sidebar .css-1d391kg, .sidebar .css-1l02zno, .sidebar .css-1kyxreq {{
-            color: #000000 !important;
-        }}
-
-        .logo-container {{
-            display: flex;
-            justify-content: center;
-            margin-bottom: 10px;
-        }}
-        .logo-container img {{
-            max-width: 280px;
-        }}
-
-        h1, h2, h3, .stMarkdown, .stTextInput > label, .stNumberInput > label {{
-            color: #fdfdfd !important;
-            text-shadow: 1px 1px 4px #000000aa;
-        }}
-
-        .saldo-box {{
-            background-color: rgba(255, 255, 0, 0.3);
-            padding: 10px;
-            border-radius: 10px;
-            font-weight: bold;
-            color: #222;
-        }}
-
-        .menu-item {{
-            font-weight: bold;
-            font-size: 16px;
-        }}
-    </style>
+<style>
+    .stApp {
+        background-image: url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    .sidebar .sidebar-content {
+        background-color: #fff;
+    }
+    .css-1d391kg { color: #333 !important; }
+    .css-1cpxqw2 { color: #333 !important; }
+    h1, h2, h3, h4, h5 {
+        color: #fff !important;
+        text-shadow: 1px 1px 4px #000;
+    }
+    .saldo-box {
+        background-color: rgba(255, 255, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    .saldo-text {
+        font-weight: bold;
+        font-size: 18px;
+        color: #222;
+    }
+</style>
 """, unsafe_allow_html=True)
 
 # -------------------- LOGO E DATA --------------------
-with st.container():
-    st.markdown('<div class="logo-container"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png"></div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center;"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" style="max-width: 280px;"></div>', unsafe_allow_html=True)
 
-hoje = st.date_input("Selecione a data", value=datetime.today(), format="DD/MM/YYYY")
+# Data customizável
+data_input = st.date_input("Selecione a data do lançamento", value=datetime.now())
+data_formatada = data_input.strftime("%d/%m/%Y")
 
 # -------------------- MENU LATERAL --------------------
-menu = st.sidebar.radio("Navegação", ["📥 Lançamentos", "📊 Dashboard", "📁 Relatórios"], key="menu")
+menu = st.sidebar.radio("📋 Menu", ["Lançamentos", "Dashboard", "Gerar Relatório"])
 
-# -------------------- ENTRADAS E SAÍDAS --------------------
-if menu == "📥 Lançamentos":
+# -------------------- TELA DE LANÇAMENTOS --------------------
+if menu == "Lançamentos":
     st.header("💰 Entradas")
     salario = st.number_input("Salário", min_value=0.0, step=100.0)
     renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
@@ -100,97 +83,74 @@ if menu == "📥 Lançamentos":
 
     saldo = total_entradas - total_saidas
 
-    if st.button("Salvar Lançamento"):
-        st.session_state.historico.append({
-            "data": hoje.strftime("%d/%m/%Y"),
-            "entradas": total_entradas,
-            "saidas": total_saidas,
-            "saldo": saldo
-        })
-        st.success("Lançamento salvo!")
-
     st.header("📊 Resumo do Dia")
+    st.markdown(f"**Data:** {data_formatada}")
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
-    st.markdown(f"<div class='saldo-box'>Saldo: R$ {saldo:,.2f}</div>", unsafe_allow_html=True)
 
-    if saldo > 0:
-        st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
-    elif saldo < 0:
-        st.caption("Tá plantando dinheiro, né linda?")
-    else:
-        st.caption("Café preto e foco!")
+    with st.container():
+        st.markdown('<div class="saldo-box">', unsafe_allow_html=True)
+        if saldo > 0:
+            st.markdown(f'<div class="saldo-text">Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}</div>', unsafe_allow_html=True)
+            st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
+        elif saldo < 0:
+            st.markdown(f'<div class="saldo-text">Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}</div>', unsafe_allow_html=True)
+            st.caption("Tá plantando dinheiro, né linda?")
+        else:
+            st.markdown(f'<div class="saldo-text">Zerada. Saldo: R$ 0,00</div>', unsafe_allow_html=True)
+            st.caption("Café preto e foco!")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------- DASHBOARD --------------------
-elif menu == "📊 Dashboard":
-    st.header("📈 Visão Geral por Período")
-    if len(st.session_state.historico) == 0:
-        st.warning("Nenhum dado cadastrado ainda.")
+elif menu == "Dashboard":
+    st.header("📈 Dashboard de Períodos")
+    data_inicio = st.date_input("Data de Início", value=datetime.now())
+    data_fim = st.date_input("Data de Fim", value=datetime.now())
+
+    # Exemplo de dados simulados para os gráficos
+    dados = pd.DataFrame({
+        'Data': pd.date_range(start=data_inicio, end=data_fim, freq='D'),
+        'Entradas': pd.Series([1000 + i*10 for i in range((data_fim - data_inicio).days + 1)]),
+        'Saídas': pd.Series([700 + i*8 for i in range((data_fim - data_inicio).days + 1)])
+    })
+    dados['Saldo'] = dados['Entradas'] - dados['Saídas']
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig1, ax1 = plt.subplots()
+        ax1.pie([dados['Entradas'].sum(), dados['Saídas'].sum()], labels=['Entradas', 'Saídas'], autopct='%1.1f%%', colors=['green', 'red'])
+        ax1.set_title("Distribuição Financeira")
+        st.pyplot(fig1)
+
+    with col2:
+        fig2, ax2 = plt.subplots()
+        ax2.plot(dados['Data'], dados['Saldo'], color='blue')
+        ax2.set_title("Evolução do Saldo")
+        ax2.set_xlabel("Data")
+        ax2.set_ylabel("Saldo")
+        st.pyplot(fig2)
+
+    saldo_medio = dados['Saldo'].mean()
+    if saldo_medio > 0:
+        st.success(f"💡 Sua média de saldo no período foi positiva: R$ {saldo_medio:,.2f}")
     else:
-        df = pd.DataFrame(st.session_state.historico)
-        datas = st.multiselect("Selecione as datas para analisar", df["data"].unique())
+        st.error(f"⚠️ Sua média de saldo foi negativa: R$ {saldo_medio:,.2f}")
 
-        if datas:
-            filtro = df[df["data"].isin(datas)]
-            total_entradas = filtro["entradas"].sum()
-            total_saidas = filtro["saidas"].sum()
-            saldo_periodo = filtro["saldo"].sum()
+# -------------------- RELATÓRIO --------------------
+elif menu == "Gerar Relatório":
+    st.header("📄 Relatório em PDF")
+    data = st.date_input("Selecione a data para o relatório", value=datetime.now())
+    entradas = st.number_input("Total de Entradas", min_value=0.0, step=50.0, key='pdf_entradas')
+    saidas = st.number_input("Total de Saídas", min_value=0.0, step=50.0, key='pdf_saidas')
+    saldo_pdf = entradas - saidas
 
-            st.markdown(f"**Entradas no período:** R$ {total_entradas:,.2f}")
-            st.markdown(f"**Gastos no período:** R$ {total_saidas:,.2f}")
-            st.markdown(f"**Saldo total:** R$ {saldo_periodo:,.2f}")
-
-            # Gráfico de pizza
-            fig1, ax1 = plt.subplots()
-            ax1.pie([total_entradas, total_saidas], labels=["Entradas", "Saídas"], autopct='%1.1f%%')
-            ax1.axis('equal')
-            st.pyplot(fig1)
-
-            # Gráfico de linha
-            fig2, ax2 = plt.subplots()
-            filtro_plot = filtro.copy()
-            filtro_plot["data"] = pd.to_datetime(filtro_plot["data"], format="%d/%m/%Y")
-            filtro_plot = filtro_plot.sort_values("data")
-            ax2.plot(filtro_plot["data"], filtro_plot["saldo"], marker='o')
-            ax2.set_title("Evolução do Saldo")
-            ax2.set_ylabel("Saldo (R$)")
-            st.pyplot(fig2)
-
-# -------------------- RELATÓRIOS --------------------
-elif menu == "📁 Relatórios":
-    st.header("📄 Gerar Relatório em PDF")
-    if len(st.session_state.historico) == 0:
-        st.warning("Nenhum dado disponível para gerar relatório.")
-    else:
-        df = pd.DataFrame(st.session_state.historico)
-        datas = st.multiselect("Selecione as datas para o relatório", df["data"].unique(), key="relatorio")
-
-        if st.button("Gerar PDF") and datas:
-            filtro = df[df["data"].isin(datas)]
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-
-            pdf.cell(200, 10, txt="Relatório Financeiro - Café du Contrôle", ln=True, align='C')
-            pdf.ln(10)
-
-            for _, row in filtro.iterrows():
-                pdf.cell(200, 10, txt=f"Data: {row['data']} - Entradas: R$ {row['entradas']:.2f} - Saídas: R$ {row['saidas']:.2f} - Saldo: R$ {row['saldo']:.2f}", ln=True)
-
-            pdf.output("relatorio_cafe_du_controle.pdf")
-            with open("relatorio_cafe_du_controle.pdf", "rb") as file:
-                st.download_button(
-                    label="📥 Baixar Relatório",
-                    data=file,
-                    file_name="relatorio_cafe_du_controle.pdf",
-                    mime="application/pdf"
-                )
+    if st.button("Gerar PDF"):
+        pdf = gerar_pdf(data.strftime("%d/%m/%Y"), entradas, saidas, saldo_pdf)
+        pdf.output("relatorio_financeiro.pdf")
+        with open("relatorio_financeiro.pdf", "rb") as f:
+            st.download_button("📥 Baixar Relatório", f, file_name="relatorio.pdf")
 
 # -------------------- RODAPÉ --------------------
-st.markdown("""
-    <br><hr>
-    <div style='text-align:center;'>
-        <img src='https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png' width='150'>
-        <p><small>☕ Desenvolvido com carinho pela ÉdenMachine</small></p>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown('<div style="text-align: center;"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" style="width: 120px;"></div>', unsafe_allow_html=True)
+st.markdown("<center><small>☕ Desenvolvido com carinho pela ÉdenMachine</small></center>", unsafe_allow_html=True)
