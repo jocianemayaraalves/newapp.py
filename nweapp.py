@@ -1,8 +1,7 @@
 import streamlit as st
-import pandas as pd
-from fpdf import FPDF
 from PIL import Image
 from datetime import datetime
+from fpdf import FPDF
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
@@ -11,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# -------------------- FUNÇÃO: FUNDO --------------------
+# -------------------- FUNÇÃO DE FUNDO --------------------
 def set_background_from_url(image_url):
     st.markdown(
         f"""
@@ -23,22 +22,6 @@ def set_background_from_url(image_url):
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
-        .block-container {{
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }}
-        .main > div {{
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 2rem;
-            border-radius: 12px;
-        }}
-        h1, h2, h3 {{
-            color: #fefefe !important;
-            text-shadow: 1px 1px 4px #000000cc;
-        }}
-        .stMarkdown, .stTextInput > label, .stNumberInput > label {{
-            color: #fdfdfd !important;
-        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -46,23 +29,48 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- LOGOS --------------------
-with st.container():
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
-            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="140" style="margin-top: -10px;">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# -------------------- ESTILOS --------------------
+st.markdown("""
+    <style>
+        .logo-container img {
+            max-width: 300px;
+        }
 
-# -------------------- SIDEBAR / MENU --------------------
-menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Gerar PDF", "Ajuda ☕"])
+        h1, h2, h3 {
+            color: #fefefe;
+            text-shadow: 1px 1px 4px #000000cc;
+        }
 
-# -------------------- RESUMO DIÁRIO --------------------
-if menu == "Resumo Diário":
+        .stMarkdown, .stTextInput > label, .stNumberInput > label {
+            color: #fdfdfd !important;
+        }
+
+        .main > div {
+            background-color: rgba(0,0,0,0.4); 
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .sidebar .sidebar-content {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .css-1d391kg { /* Sidebar width fix */
+            width: 250px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# -------------------- MENU LATERAL --------------------
+with st.sidebar:
+    st.header("☕ Menu")
+    menu = st.radio("Navegar para:", ["Início", "Relatórios futuros", "Sobre"])
+
+# -------------------- CONTEÚDO PRINCIPAL --------------------
+if menu == "Início":
+    # Logo principal
+    st.markdown('<div class="logo-container" style="text-align: center;"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" alt="Logo Café du Contrôle"></div>', unsafe_allow_html=True)
+
     st.header("💰 Entradas")
     salario = st.number_input("Salário", min_value=0.0, step=100.0)
     renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
@@ -73,66 +81,43 @@ if menu == "Resumo Diário":
     extras = st.number_input("Gastos Variáveis", min_value=0.0, step=50.0)
     total_saidas = fixos + extras
 
-    saldo = total_entradas - total_saidas
     hoje = datetime.now().strftime("%d/%m/%Y")
 
     st.header("📊 Resumo do Dia")
     st.markdown(f"**Data:** {hoje}")
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
+    saldo = total_entradas - total_saidas
+
+    # -------------------- SALDO EM DESTAQUE --------------------
+    saldo_box = f"""
+    <div style="background-color: #fff9e6; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 10px #00000055;">
+        <h3 style="color: #4b2e00; text-align: center;">
+            Saldo do Dia: R$ {saldo:,.2f}
+        </h3>
+        <p style="text-align: center; font-style: italic; color: #4b2e00;">
+    """
 
     if saldo > 0:
-        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
-        st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
+        mensagem = "💚 Você está positiva hoje! <br>Vou começar a te chamar de Senhora... e com voz aveludada!"
     elif saldo < 0:
-        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
-        st.caption("Tá plantando dinheiro, né linda?")
+        mensagem = "💸 Você gastou mais do que ganhou hoje! <br>Tá plantando dinheiro, né linda?"
     else:
-        st.warning("Zerada. Saldo: R$ 0,00")
-        st.caption("Café preto e foco!")
+        mensagem = "⚠️ Zerada. Saldo: R$ 0,00 <br>Café preto e foco!"
 
-# -------------------- HISTÓRICO MENSAL --------------------
-elif menu == "Histórico Mensal":
-    st.header("📅 Histórico Mensal")
-    st.info("Em breve: você poderá visualizar um resumo de seus lançamentos por mês, com gráficos lindos no tema outonal. 🍂")
+    saldo_box += mensagem + "</p></div>"
+    st.markdown(saldo_box, unsafe_allow_html=True)
 
-# -------------------- GERAR PDF --------------------
-elif menu == "Gerar PDF":
-    st.header("📄 Gerar Relatório em PDF")
+# -------------------- SOBRE --------------------
+elif menu == "Sobre":
+    st.subheader("☕ Café du Contrôle")
+    st.markdown("Organize suas finanças de forma acolhedora e divertida. Uma criação com amor da **ÉdenMachine**.")
+    st.markdown("---")
 
-    nome = st.text_input("Seu nome:")
-    entradas_pdf = st.number_input("Entradas (R$)", key="pdf_entrada")
-    saidas_pdf = st.number_input("Saídas (R$)", key="pdf_saida")
-    saldo_pdf = entradas_pdf - saidas_pdf
-
-    if st.button("📥 Baixar PDF"):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=14)
-        pdf.cell(200, 10, txt="Relatório Financeiro - Café du Contrôle ☕", ln=True, align="C")
-        pdf.ln(10)
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt=f"Nome: {nome}", ln=True)
-        pdf.cell(200, 10, txt=f"Entradas: R$ {entradas_pdf:,.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Saídas: R$ {saidas_pdf:,.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Saldo: R$ {saldo_pdf:,.2f}", ln=True)
-
-        pdf_output = "relatorio.pdf"
-        pdf.output(pdf_output)
-
-        with open(pdf_output, "rb") as file:
-            st.download_button("📄 Clique para baixar seu PDF", file, file_name="relatorio_financeiro.pdf")
-
-# -------------------- AJUDA --------------------
-elif menu == "Ajuda ☕":
-    st.header("❓ Ajuda e Dicas")
-    st.markdown("""
-    - **Resumo Diário**: preencha suas entradas e gastos para ver seu saldo.
-    - **Histórico Mensal**: em breve você poderá visualizar seu progresso mês a mês.
-    - **Gerar PDF**: baixe um relatório com seu nome e saldos.
-    - Para dúvidas, fale com a equipe da ÉdenMachine. ✨
-    """)
-
-# -------------------- RODAPÉ --------------------
-st.markdown("---")
-st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
+# -------------------- LOGO DA ÉDEN --------------------
+st.markdown("""
+    <div style="position: relative; bottom: 0; width: 100%; text-align: center; margin-top: 50px;">
+        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" style="max-height: 100px;" />
+        <p style="color: white; font-size: 12px;">Desenvolvido com carinho pela ÉdenMachine</p>
+    </div>
+""", unsafe_allow_html=True)
