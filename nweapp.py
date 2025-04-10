@@ -160,4 +160,9 @@ elif menu == "Ajuda ☕":
 
 # -------------------- RODAPÉ --------------------
 st.markdown("---")
-st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
+st.markdown("""
+    <div style="text-align: center;">
+        <small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="100">
+    </div>
+    """, unsafe_allow_html=True)
