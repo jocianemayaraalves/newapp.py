@@ -137,7 +137,7 @@ st.markdown("---", unsafe_allow_html=True)
 st.markdown(
     """
     <div style='text-align: center;'>
-        <p style='margin-bottom: 4px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></p>
+        <p style='margin-bottom: 11px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></p>
         <img src='https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png' width='120'>
     </div>
     """,
