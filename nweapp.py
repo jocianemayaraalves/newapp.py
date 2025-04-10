@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Função para aplicar imagem de fundo via URL
+# -------------------- FUNÇÃO BG --------------------
 def set_background_from_url(image_url):
     st.markdown(
         f"""
@@ -26,7 +26,7 @@ def set_background_from_url(image_url):
         unsafe_allow_html=True
     )
 
-# Define imagem de fundo (substitua o link se necessário)
+# Imagem de fundo
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
 # -------------------- ESTILOS --------------------
@@ -38,11 +38,11 @@ st.markdown("""
             margin-bottom: 10px;
         }
         .logo-container img {
-            max-width: 250px;
+            max-width: 320px;  /* AUMENTEI AQUI */
         }
 
         h1, h2, h3 {
-            color: #fefefe;
+            color: #fefefe !important;
             text-shadow: 1px 1px 4px #000000cc;
         }
 
@@ -50,11 +50,11 @@ st.markdown("""
             color: #fdfdfd !important;
         }
 
-        .main > div {{
+        .main > div {
             padding-top: 20px;
             background-color: rgba(0,0,0,0.4); 
             border-radius: 10px;
-        }}
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -63,7 +63,7 @@ with st.container():
     st.markdown('<div class="logo-container"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" alt="Logo Café du Contrôle"></div>', unsafe_allow_html=True)
 
 # -------------------- SISTEMA FINANCEIRO --------------------
-st.title("Controle Financeiro")
+# st.title("Controle Financeiro")  --> REMOVIDO
 
 st.header("💰 Entradas")
 salario = st.number_input("Salário", min_value=0.0, step=100.0)
@@ -78,9 +78,10 @@ total_saidas = fixos + extras
 hoje = datetime.now().strftime("%d/%m/%Y")
 
 st.header("📊 Resumo do Dia")
-st.markdown(f"**Data:** {hoje}")
-st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
-st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
+st.markdown(f"<span style='color:#fffaf0'><strong>Data:</strong> {hoje}</span>", unsafe_allow_html=True)
+st.markdown(f"<span style='color:#fffaf0'><strong>Total de Entradas:</strong> R$ {total_entradas:,.2f}</span>", unsafe_allow_html=True)
+st.markdown(f"<span style='color:#fffaf0'><strong>Total de Gastos:</strong> R$ {total_saidas:,.2f}</span>", unsafe_allow_html=True)
+
 saldo = total_entradas - total_saidas
 
 if saldo > 0:
@@ -93,6 +94,6 @@ else:
     st.warning("Zerada. Saldo: R$ 0,00")
     st.caption("Café preto e foco!")
 
-# Rodapé
+# -------------------- RODAPÉ --------------------
 st.markdown("---")
 st.markdown("<center><small>☕ Desenvolvido com carinho no Café du Contrôle</small></center>", unsafe_allow_html=True)
