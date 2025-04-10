@@ -63,12 +63,17 @@ st.markdown("""
             border-radius: 10px;
         }
 
+        .saldo-box .saldo-text {
+            color: #222222;
+            font-weight: bold;
+        }
+
         .sidebar .sidebar-content {
             background-color: rgba(0, 0, 0, 0.5);
         }
 
         .menu-item {
-            color: #fefefe;
+            color: #222222;
             font-weight: bold;
             margin-bottom: 10px;
         }
@@ -109,13 +114,13 @@ st.markdown("<h2>💼 Saldo do Dia</h2>", unsafe_allow_html=True)
 with st.container():
     st.markdown("<div class='saldo-box'>", unsafe_allow_html=True)
     if saldo > 0:
-        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
+        st.markdown(f"<div class='saldo-text'>Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}</div>", unsafe_allow_html=True)
         st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
-        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
+        st.markdown(f"<div class='saldo-text'>Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}</div>", unsafe_allow_html=True)
         st.caption("Tá plantando dinheiro, né linda?")
     else:
-        st.warning("Zerada. Saldo: R$ 0,00")
+        st.markdown("<div class='saldo-text'>Zerada. Saldo: R$ 0,00</div>", unsafe_allow_html=True)
         st.caption("Café preto e foco!")
     st.markdown("</div>", unsafe_allow_html=True)
 
