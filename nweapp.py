@@ -33,14 +33,14 @@ st.markdown("""
         .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
         .logo-container img {
-            max-width: 250px;
+            max-width: 320px;
         }
 
         h1, h2, h3 {
-            color: #fefefe;
+            color: #fff8e7 !important;
             text-shadow: 1px 1px 4px #000000cc;
         }
 
@@ -111,4 +111,4 @@ else:
 # -------------------- RODAPÉ COM LOGO ÉDEN --------------------
 st.markdown("---")
 st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
-st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo.png", width=120)
+st.image("https://github.com/jocianemayaraalves/newapp.py/blob/main/eden-machine-logo-removebg-preview.png", width=120)
