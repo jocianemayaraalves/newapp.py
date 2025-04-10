@@ -1,14 +1,7 @@
 import streamlit as st
-import datetime
+from datetime import date
 
-# CONFIGURAÇÃO DE PÁGINA COM FAVICON
-st.set_page_config(
-    page_title="Café du Contrôle",
-    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/favicon.png",
-    layout="centered"
-)
-
-# CSS ESTILIZADO
+# --- CSS personalizado ---
 st.markdown(
     f"""
     <style>
@@ -18,7 +11,7 @@ st.markdown(
     }}
 
     [data-testid="stAppViewContainer"] > .main {{
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.90);
         padding: 2rem;
         border-radius: 1rem;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -33,23 +26,27 @@ st.markdown(
     h1 {{
         font-size: 3em;
         font-weight: 900;
-        background: linear-gradient(145deg, #d9b58b, #5c4033, #a98b71);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        color: #fff;
+        text-shadow: 2px 2px 3px #000, -1px -1px 2px #f5d7aa;
         font-family: 'Georgia', serif;
     }}
 
     h2, .stSubheader {{
-        color: #4e3b2c;
+        color: #502e1c;
+        background-color: #f7e6d1;
+        padding: 0.3em 0.8em;
+        border-radius: 0.5em;
+        font-weight: bold;
         font-size: 1.3em;
-        font-weight: 600;
-        text-shadow: 1px 1px 1px #fff4ec;
+        box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        display: inline-block;
+        margin-top: 1.2em;
     }}
 
     div, p, label {{
         color: #3a2f28 !important;
         font-family: 'Georgia', serif;
+        font-size: 1em;
     }}
 
     input, textarea, select {{
@@ -94,44 +91,44 @@ st.markdown(
     }}
     </style>
 
-    <!-- LOGO -->
     <img id="logo" src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe-du-controle.png">
-
-    <!-- RODAPÉ -->
-    <footer>
-        Seu controle financeiro com cheiro de café quente ☕
-    </footer>
+    <footer>Seu controle financeiro com cheiro de café quente ☕</footer>
     """,
     unsafe_allow_html=True
 )
 
-# CONTEÚDO DO APP
+# --- Título e introdução ---
 st.title("☕ Café du Contrôle")
-st.subheader("Toma um café e organiza teu dinheiro, mulher!")
+st.write("Toma um café e organiza teu dinheiro, mulher!")
 
-st.markdown("### 📥 Entradas")
+# --- Entradas ---
+st.markdown("### 📥 <strong>Entradas</strong>", unsafe_allow_html=True)
 salario = st.number_input("Salário", min_value=0.0, format="%.2f")
 renda_extra = st.number_input("Renda extra", min_value=0.0, format="%.2f")
 
-st.markdown("### 💸 Saídas")
+# --- Saídas ---
+st.markdown("### 💸 <strong>Saídas</strong>", unsafe_allow_html=True)
 gastos_fixos = st.number_input("Gastos fixos", min_value=0.0, format="%.2f")
 gastos_extras = st.number_input("Gastos extras", min_value=0.0, format="%.2f")
 
-data = st.date_input("Data", value=datetime.date.today())
+# --- Data ---
+st.markdown("### 📅 <strong>Data</strong>", unsafe_allow_html=True)
+data = st.date_input("Data", value=date.today())
 
+# --- Resumo ---
+st.markdown("### 🧾 <strong>Resumo do Dia:</strong>", unsafe_allow_html=True)
 entradas = salario + renda_extra
 saidas = gastos_fixos + gastos_extras
 saldo = entradas - saidas
 
-st.markdown("### 🧾 Resumo do Dia:")
-st.write(f"**Entradas**: R$ {entradas:.2f}")
-st.write(f"**Saídas**: R$ {saidas:.2f}")
-st.write(f"**Saldo**: R$ {saldo:.2f}")
+st.write(f"**Entradas**: R${entradas:,.2f}")
+st.write(f"**Saídas**: R${saidas:,.2f}")
 
-if saldo < 0:
-    st.error("🌧️ Tá plantando dinheiro, né linda?")
-elif saldo > 0:
-    st.success("💅 Vou começar a te chamar de Senhora... e com voz aveludada!")
+# Mensagem divertida
+if saldo > 0:
+    st.success("💰 Vou começar a te chamar de Senhora... e com voz aveludada!")
+elif saldo < 0:
+    st.error("🌱 Tá plantando dinheiro, né linda?")
 else:
-    st.info("🧘‍♀️ Equilibrou tudo hoje. Igual coração de mãe!")
+    st.info("💸 Equilíbrio é tudo, mas um cafezinho a mais não faz mal!")
 
