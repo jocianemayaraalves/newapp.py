@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
     page_title="Café du Contrôle ☕",
-    page_icon=":coffee:",
+    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe-icon.ico",  # URL do ícone
     layout="wide"
 )
 
