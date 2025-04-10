@@ -1,7 +1,7 @@
 st.markdown("""
     <style>
     html, body, [data-testid="stApp"] {
-        background-image: url("https://raw.githubusercontent.com/seu-usuario/seu-repo/main/cafe-fundo.jpg");
+        background-image: url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe-fundo.jpg");
         background-size: cover;
         background-attachment: fixed;
         background-position: center;
