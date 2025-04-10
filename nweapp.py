@@ -56,46 +56,6 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- FUNÇÕES DO BANCO DE DADOS --------------------
-def criar_tabela():
-    """Cria a tabela de relatórios se não existir"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS relatorios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            data TEXT,
-            entradas REAL,
-            saidas REAL,
-            saldo REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def salvar_dados(data, entradas, saidas, saldo):
-    """Salva um novo relatório no banco de dados"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO relatorios (data, entradas, saidas, saldo)
-        VALUES (?, ?, ?, ?)
-    """, (data, entradas, saidas, saldo))
-    conn.commit()
-    conn.close()
-
-def carregar_dados():
-    """Carrega todos os relatórios salvos no banco de dados"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM relatorios ORDER BY data DESC")
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
-
-# Criar a tabela no banco de dados
-criar_tabela()
-
 # -------------------- LOGO --------------------
 with st.container():
     st.markdown(
@@ -108,6 +68,34 @@ with st.container():
     )
 
 data_lancamento = st.date_input("📅 Selecione a data do lançamento:", value=date.today())
+
+# -------------------- CONFIGURAÇÃO SQLITE --------------------
+# Conectando-se ao banco de dados SQLite
+conn = sqlite3.connect('cafe_controle.db')
+cursor = conn.cursor()
+
+# Criando a tabela se não existir
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS relatorios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data DATE,
+    entradas FLOAT,
+    saidas FLOAT,
+    saldo FLOAT
+)
+""")
+conn.commit()
+
+# Função para salvar os relatórios no banco de dados
+def salvar_relatorio(data, entradas, saidas, saldo):
+    cursor.execute("INSERT INTO relatorios (data, entradas, saidas, saldo) VALUES (?, ?, ?, ?)",
+                   (data, entradas, saidas, saldo))
+    conn.commit()
+
+# Função para recuperar relatórios do banco de dados
+def recuperar_relatorios():
+    cursor.execute("SELECT * FROM relatorios ORDER BY data DESC")
+    return cursor.fetchall()
 
 # -------------------- SIDEBAR --------------------
 menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "Gerar PDF", "Carteira", "Ajuda ☕"])
@@ -145,45 +133,42 @@ if menu == "Resumo Diário":
 
     if st.button("💾 Salvar relatório do dia"):
         st.success("Relatório salvo com sucesso!")
-        salvar_dados(data_lancamento.strftime('%d/%m/%Y'), total_entradas, total_saidas, saldo)
+        salvar_relatorio(data_lancamento, total_entradas, total_saidas, saldo)
 
 # -------------------- RELATÓRIOS --------------------
 elif menu == "Relatórios":
     st.header("📂 Relatórios Salvos")
-    dados_salvos = carregar_dados()
-
-    if dados_salvos:
-        st.write("Relatórios Salvos:")
-        for dado in dados_salvos:
-            st.markdown(f"**Data:** {dado[1]}")
-            st.markdown(f"**Entradas:** R$ {dado[2]:,.2f}")
-            st.markdown(f"**Saídas:** R$ {dado[3]:,.2f}")
-            st.markdown(f"**Saldo:** R$ {dado[4]:,.2f}")
-            st.markdown("---")
+    relatorios = recuperar_relatorios()
+    
+    if relatorios:
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
+        st.dataframe(df)
     else:
         st.info("Nenhum relatório salvo ainda.")
 
 # -------------------- GERAR PDF --------------------
 elif menu == "Gerar PDF":
     st.header("📄 Gerar Relatório em PDF")
-    df = pd.DataFrame(st.session_state.relatorios)
+    relatorios = recuperar_relatorios()
 
-    if not df.empty:
-        data_inicial = st.date_input("Data inicial", value=df['data'].min().date())
-        data_final = st.date_input("Data final", value=df['data'].max().date())
+    if relatorios:
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
 
-        filtro = (df["data"] >= pd.to_datetime(data_inicial)) & (df["data"] <= pd.to_datetime(data_final))
+        data_inicial = st.date_input("Data inicial", value=df['Data'].min())
+        data_final = st.date_input("Data final", value=df['Data'].max())
+
+        filtro = (df["Data"] >= data_inicial) & (df["Data"] <= data_final)
         df_filtrado = df[filtro]
 
         st.subheader("Gráficos")
         if not df_filtrado.empty:
-            st.pyplot(df_filtrado.plot(x="data", y=["entradas", "saidas", "saldo"], kind="line").figure)
-            st.pyplot(df_filtrado[["entradas", "saidas"]].sum().plot.pie(autopct='%1.1f%%').figure)
+            st.pyplot(df_filtrado.plot(x="Data", y=["Entradas", "Saídas", "Saldo"], kind="line").figure)
+            st.pyplot(df_filtrado[["Entradas", "Saídas"]].sum().plot.pie(autopct='%1.1f%%').figure)
 
         st.subheader("Informações Inteligentes")
-        st.markdown(f"- **Média de saldo diário:** R$ {df_filtrado['saldo'].mean():,.2f}")
-        st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['saldo'].idxmax()]['data'].strftime('%d/%m/%Y')}")
-        st.markdown(f"- **Maior gasto:** R$ {df_filtrado['saidas'].max():,.2f}")
+        st.markdown(f"- **Média de saldo diário:** R$ {df_filtrado['Saldo'].mean():,.2f}")
+        st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['Saldo'].idxmax()]['Data']}")
+        st.markdown(f"- **Maior gasto:** R$ {df_filtrado['Saídas'].max():,.2f}")
 
     else:
         st.warning("Nenhum dado disponível para gerar PDF.")
@@ -191,13 +176,15 @@ elif menu == "Gerar PDF":
 # -------------------- CARTEIRA --------------------
 elif menu == "Carteira":
     st.header("💼 Saldo em Carteira por Mês")
-    df = pd.DataFrame(st.session_state.relatorios)
-    if not df.empty:
-        df["data"] = pd.to_datetime(df["data"])
-        df["mes"] = df["data"].dt.strftime("%B")
-        df_mes = df.groupby("mes")[["entradas", "saidas", "saldo"]].sum().reset_index()
+    relatorios = recuperar_relatorios()
+
+    if relatorios:
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
+        df["Data"] = pd.to_datetime(df["Data"])
+        df["Mês"] = df["Data"].dt.strftime("%B")
+        df_mes = df.groupby("Mês")[["Entradas", "Saídas", "Saldo"]].sum().reset_index()
         st.dataframe(df_mes)
-        st.bar_chart(df_mes.set_index("mes")["saldo"])
+        st.bar_chart(df_mes.set_index("Mês")["Saldo"])
     else:
         st.info("Sem dados ainda. Salve relatórios no Resumo Diário.")
 
