@@ -46,7 +46,7 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- LOGO SUPERIOR --------------------
+# -------------------- LOGO + DATA PERSONALIZADA --------------------
 with st.container():
     st.markdown(
         """
@@ -56,9 +56,10 @@ with st.container():
         """,
         unsafe_allow_html=True
     )
+    data_selecionada = st.date_input("Escolha a data do lançamento", value=datetime.now(), format="DD/MM/YYYY")
 
 # -------------------- SIDEBAR / MENU --------------------
-menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Gerar PDF", "Ajuda ☕"])
+menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Relatórios", "Gerar PDF", "Ajuda ☕"])
 
 # -------------------- RESUMO DIÁRIO --------------------
 if menu == "Resumo Diário":
@@ -73,49 +74,51 @@ if menu == "Resumo Diário":
     total_saidas = fixos + extras
 
     saldo = total_entradas - total_saidas
-    hoje = datetime.now().strftime("%d/%m/%Y")
+    hoje = data_selecionada.strftime("%d/%m/%Y")
 
     st.header("📊 Resumo do Dia")
     st.markdown(f"**Data:** {hoje}")
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
 
-    # SALDO COM LETRA BRANCA
     if saldo > 0:
-        st.markdown(
-            f"""
-            <div style="background-color: rgba(0, 255, 0, 0.2); padding: 10px; border-radius: 8px;">
-                <p style="color: white;"><strong>Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}</strong></p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
         st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
-        st.markdown(
-            f"""
-            <div style="background-color: rgba(255, 0, 0, 0.2); padding: 10px; border-radius: 8px;">
-                <p style="color: white;"><strong>Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}</strong></p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
         st.caption("Tá plantando dinheiro, né linda?")
     else:
-        st.markdown(
-            """
-            <div style="background-color: rgba(255, 255, 0, 0.2); padding: 10px; border-radius: 8px;">
-                <p style="color: white;"><strong>Zerada. Saldo: R$ 0,00</strong></p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.warning("Zerada. Saldo: R$ 0,00")
         st.caption("Café preto e foco!")
+
+    # -------------------- SALVAR RELATÓRIO DO DIA --------------------
+    if 'relatorios_salvos' not in st.session_state:
+        st.session_state['relatorios_salvos'] = []
+
+    if st.button("💾 Salvar relatório do dia"):
+        relatorio = {
+            "data": hoje,
+            "entradas": total_entradas,
+            "saidas": total_saidas,
+            "saldo": saldo
+        }
+        st.session_state['relatorios_salvos'].append(relatorio)
+        st.success("Relatório salvo com sucesso!")
 
 # -------------------- HISTÓRICO MENSAL --------------------
 elif menu == "Histórico Mensal":
     st.header("📅 Histórico Mensal")
     st.info("Em breve: você poderá visualizar um resumo de seus lançamentos por mês, com gráficos lindos no tema outonal. 🍂")
+
+# -------------------- RELATÓRIOS --------------------
+elif menu == "Relatórios":
+    st.header("📚 Relatórios Salvos")
+
+    if 'relatorios_salvos' in st.session_state and st.session_state['relatorios_salvos']:
+        df_relatorios = pd.DataFrame(st.session_state['relatorios_salvos'])
+        st.dataframe(df_relatorios)
+    else:
+        st.info("Nenhum relatório salvo ainda. Salve pelo Resumo Diário.")
 
 # -------------------- GERAR PDF --------------------
 elif menu == "Gerar PDF":
@@ -150,18 +153,11 @@ elif menu == "Ajuda ☕":
     st.markdown("""
     - **Resumo Diário**: preencha suas entradas e gastos para ver seu saldo.
     - **Histórico Mensal**: em breve você poderá visualizar seu progresso mês a mês.
+    - **Relatórios**: veja todos os lançamentos salvos por você.
     - **Gerar PDF**: baixe um relatório com seu nome e saldos.
     - Para dúvidas, fale com a equipe da ÉdenMachine. ✨
     """)
 
 # -------------------- RODAPÉ --------------------
 st.markdown("---")
-st.markdown(
-    """
-    <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="140">
-        <small style="color: #ffffffaa;">☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
