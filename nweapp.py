@@ -2,6 +2,13 @@ import streamlit as st
 from PIL import Image
 from datetime import datetime
 
+# -------------------- CONFIG GERAL --------------------
+st.set_page_config(
+    page_title="Café du Contrôle ☕",
+    page_icon=":coffee:",
+    layout="centered"
+)
+
 # Função para aplicar imagem de fundo via URL
 def set_background_from_url(image_url):
     st.markdown(
@@ -19,20 +26,12 @@ def set_background_from_url(image_url):
         unsafe_allow_html=True
     )
 
-# Define imagem de fundo (substitua o link pelo correto do seu GitHub se necessário)
+# Define imagem de fundo (substitua o link se necessário)
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
-
-# -------------------- CONFIG GERAL --------------------
-st.set_page_config(
-    page_title="Café du Contrôle ☕",
-    page_icon=":coffee:",
-    layout="centered"
-)
 
 # -------------------- ESTILOS --------------------
 st.markdown("""
     <style>
-        /* Centralizar logo */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -42,18 +41,15 @@ st.markdown("""
             max-width: 250px;
         }
 
-        /* Títulos com sombra e brilho */
         h1, h2, h3 {
             color: #fefefe;
             text-shadow: 1px 1px 4px #000000cc;
         }
 
-        /* Textos */
         .stMarkdown, .stTextInput > label, .stNumberInput > label {
             color: #fdfdfd !important;
         }
 
-        /* Container principal */
         .main > div {{
             padding-top: 20px;
             background-color: rgba(0,0,0,0.4); 
@@ -69,22 +65,18 @@ with st.container():
 # -------------------- SISTEMA FINANCEIRO --------------------
 st.title("Controle Financeiro")
 
-# Entradas
 st.header("💰 Entradas")
 salario = st.number_input("Salário", min_value=0.0, step=100.0)
 renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
 total_entradas = salario + renda_extra
 
-# Saídas
 st.header("💸 Gastos")
 fixos = st.number_input("Gastos Fixos", min_value=0.0, step=100.0)
 extras = st.number_input("Gastos Variáveis", min_value=0.0, step=50.0)
 total_saidas = fixos + extras
 
-# Data atual
 hoje = datetime.now().strftime("%d/%m/%Y")
 
-# Resultado
 st.header("📊 Resumo do Dia")
 st.markdown(f"**Data:** {hoje}")
 st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
