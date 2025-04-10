@@ -1,10 +1,9 @@
+
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-from PIL import Image
-from datetime import datetime
+from datetime import datetime, date
 import matplotlib.pyplot as plt
-import io
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
@@ -41,6 +40,15 @@ def set_background_from_url(image_url):
         .stMarkdown, .stTextInput > label, .stNumberInput > label {{
             color: #fdfdfd !important;
         }}
+        .saldo-box {{
+            background-color: rgba(255, 255, 0, 0.4);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -48,11 +56,7 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- DADOS --------------------
-if 'relatorios' not in st.session_state:
-    st.session_state['relatorios'] = []
-
-# -------------------- LOGOS --------------------
+# -------------------- LOGO --------------------
 with st.container():
     st.markdown(
         """
@@ -62,10 +66,15 @@ with st.container():
         """,
         unsafe_allow_html=True
     )
-    data_custom = st.date_input("Selecione a data do lançamento:", value=datetime.today())
 
-# -------------------- SIDEBAR / MENU --------------------
-menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Histórico Mensal", "Gerar PDF", "Ajuda ☕"])
+data_lancamento = st.date_input("📅 Selecione a data do lançamento:", value=date.today())
+
+# Inicializa os dados salvos
+if "relatorios" not in st.session_state:
+    st.session_state.relatorios = []
+
+# -------------------- SIDEBAR --------------------
+menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "Gerar PDF", "Carteira", "Ajuda ☕"])
 
 # -------------------- RESUMO DIÁRIO --------------------
 if menu == "Resumo Diário":
@@ -82,91 +91,93 @@ if menu == "Resumo Diário":
     saldo = total_entradas - total_saidas
 
     st.header("📊 Resumo do Dia")
-    st.markdown(f"**Data:** {data_custom.strftime('%d/%m/%Y')}")
+    st.markdown(f"**Data:** {data_lancamento.strftime('%d/%m/%Y')}")
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
 
     if saldo > 0:
-        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
+        st.success(f"Você está positiva hoje! 💚")
         st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
-        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
+        st.error("Você gastou mais do que ganhou hoje! 💸")
         st.caption("Tá plantando dinheiro, né linda?")
     else:
         st.warning("Zerada. Saldo: R$ 0,00")
         st.caption("Café preto e foco!")
 
+    st.markdown(f'<div class="saldo-box">Saldo do Dia: R$ {saldo:,.2f}</div>', unsafe_allow_html=True)
+
     if st.button("💾 Salvar relatório do dia"):
+        st.success("Relatório salvo com sucesso!")
         st.session_state.relatorios.append({
-            "data": data_custom,
+            "data": data_lancamento,
             "entradas": total_entradas,
             "saidas": total_saidas,
             "saldo": saldo
         })
-        st.success("Relatório salvo com sucesso!")
 
-# -------------------- HISTÓRICO MENSAL --------------------
-elif menu == "Histórico Mensal":
-    st.header("📅 Histórico Mensal")
-    st.info("Em breve: você poderá visualizar um resumo de seus lançamentos por mês, com gráficos lindos no tema outonal. 🍂")
+# -------------------- RELATÓRIOS --------------------
+elif menu == "Relatórios":
+    st.header("📂 Relatórios Salvos")
+    df = pd.DataFrame(st.session_state.relatorios)
+    if not df.empty:
+        df['data'] = pd.to_datetime(df['data'])
+        st.dataframe(df.sort_values(by="data", ascending=False))
+    else:
+        st.info("Nenhum relatório salvo ainda.")
 
 # -------------------- GERAR PDF --------------------
 elif menu == "Gerar PDF":
     st.header("📄 Gerar Relatório em PDF")
+    df = pd.DataFrame(st.session_state.relatorios)
 
-    data_inicio = st.date_input("Data inicial:", value=datetime.today())
-    data_fim = st.date_input("Data final:", value=datetime.today())
+    if not df.empty:
+        data_inicial = st.date_input("Data inicial", value=df['data'].min().date())
+        data_final = st.date_input("Data final", value=df['data'].max().date())
 
-    dados_filtrados = [r for r in st.session_state.relatorios if data_inicio <= r['data'] <= data_fim]
+        filtro = (df["data"] >= pd.to_datetime(data_inicial)) & (df["data"] <= pd.to_datetime(data_final))
+        df_filtrado = df[filtro]
 
-    if dados_filtrados:
-        df = pd.DataFrame(dados_filtrados)
-        st.subheader("📈 Gráficos")
+        st.subheader("Gráficos")
+        if not df_filtrado.empty:
+            st.pyplot(df_filtrado.plot(x="data", y=["entradas", "saidas", "saldo"], kind="line").figure)
+            st.pyplot(df_filtrado[["entradas", "saidas"]].sum().plot.pie(autopct='%1.1f%%').figure)
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Entradas vs Saídas (Pizza)**")
-            total_entradas = df['entradas'].sum()
-            total_saidas = df['saidas'].sum()
-            fig1, ax1 = plt.subplots()
-            ax1.pie([total_entradas, total_saidas], labels=['Entradas', 'Saídas'], autopct='%1.1f%%')
-            st.pyplot(fig1)
-
-        with col2:
-            st.markdown("**Saldo ao longo do tempo (Linha)**")
-            fig2, ax2 = plt.subplots()
-            ax2.plot(df['data'], df['saldo'], marker='o', linestyle='-')
-            ax2.set_title("Evolução do Saldo")
-            ax2.set_ylabel("Saldo")
-            plt.xticks(rotation=45)
-            st.pyplot(fig2)
-
-        st.subheader("📌 Informações Inteligentes")
-        st.markdown(f"**Saldo médio:** R$ {df['saldo'].mean():,.2f}")
-        melhor_dia = df.loc[df['saldo'].idxmax()]
-        st.markdown(f"**Dia mais lucrativo:** {melhor_dia['data'].strftime('%d/%m/%Y')} (R$ {melhor_dia['saldo']:,.2f})")
-        pior_dia = df.loc[df['saldo'].idxmin()]
-        st.markdown(f"**Dia mais crítico:** {pior_dia['data'].strftime('%d/%m/%Y')} (R$ {pior_dia['saldo']:,.2f})")
+        st.subheader("Informações Inteligentes")
+        st.markdown(f"- **Média de saldo diário:** R$ {df_filtrado['saldo'].mean():,.2f}")
+        st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['saldo'].idxmax()]['data'].strftime('%d/%m/%Y')}")
+        st.markdown(f"- **Maior gasto:** R$ {df_filtrado['saidas'].max():,.2f}")
 
     else:
-        st.warning("Nenhum dado encontrado para o período selecionado.")
+        st.warning("Nenhum dado disponível para gerar PDF.")
+
+# -------------------- CARTEIRA --------------------
+elif menu == "Carteira":
+    st.header("💼 Saldo em Carteira por Mês")
+    df = pd.DataFrame(st.session_state.relatorios)
+    if not df.empty:
+        df["data"] = pd.to_datetime(df["data"])
+        df["mes"] = df["data"].dt.strftime("%B")
+        df_mes = df.groupby("mes")[["entradas", "saidas", "saldo"]].sum().reset_index()
+        st.dataframe(df_mes)
+        st.bar_chart(df_mes.set_index("mes")["saldo"])
+    else:
+        st.info("Sem dados ainda. Salve relatórios no Resumo Diário.")
 
 # -------------------- AJUDA --------------------
 elif menu == "Ajuda ☕":
     st.header("❓ Ajuda e Dicas")
     st.markdown("""
-    - **Resumo Diário**: preencha suas entradas e gastos para ver seu saldo.
-    - **Histórico Mensal**: em breve você poderá visualizar seu progresso mês a mês.
-    - **Gerar PDF**: baixe um relatório com seu nome e saldos.
-    - Para dúvidas, fale com a equipe da ÉdenMachine. ✨
+    - **Resumo Diário**: registre entradas e gastos do dia.
+    - **Relatórios**: veja seus lançamentos anteriores.
+    - **Gerar PDF**: baixe relatórios com gráficos.
+    - **Carteira**: veja quanto ainda tem de saldo no mês.
     """)
 
 # -------------------- RODAPÉ --------------------
 st.markdown("""
-<hr>
-<div style="text-align: center;">
-    <small style="font-size: 10px;">☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
-    <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="70">
-</div>
+---
+<center><small style='font-size:10px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+<img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="80">
+</center>
 """, unsafe_allow_html=True)
