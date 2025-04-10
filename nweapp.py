@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from datetime import datetime
 
 st.set_page_config(page_title="Café du Contrôle", page_icon="☕", layout="centered")
 
@@ -37,7 +38,8 @@ st.markdown("""
 
     .stTextInput>div>div>input,
     .stSelectbox>div>div>div,
-    .stNumberInput>div>div>input {
+    .stNumberInput>div>div>input,
+    .stDateInput>div>input {
         background-color: #fff7ee;
         border: 1px solid #e0c3a0;
         border-radius: 10px;
@@ -57,7 +59,7 @@ st.markdown("<div class='title'>🍁 Café du Contrôle 🍂</div>", unsafe_allo
 # --- Login simples ---
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.data = pd.DataFrame(columns=["Tipo", "Descrição", "Valor"])
+    st.session_state.data = pd.DataFrame(columns=["Data", "Tipo", "Descrição", "Valor"])
 
 if not st.session_state.logged_in:
     st.subheader("🔐 Login")
@@ -71,24 +73,29 @@ if not st.session_state.logged_in:
             st.warning("Preencha os dois campos.")
     st.stop()
 
-# --- Área principal ---
-st.subheader("📌 Lançamentos")
+# --- Área de lançamento ---
+st.subheader("📌 Novo Lançamento")
+data = st.date_input("Data", datetime.today())
 tipo = st.selectbox("Tipo", ["Entrada", "Saída"])
 descricao = st.text_input("Descrição")
-valor = st.number_input("Valor", min_value=0.0, format="%.2f")
+valor = st.number_input("Valor (R$)", min_value=0.0, format="%.2f")
 
-if st.button("💾 Salvar"):
-    nova_linha = pd.DataFrame([[tipo, descricao, valor]], columns=["Tipo", "Descrição", "Valor"])
+if st.button("💾 Adicionar"):
+    nova_linha = pd.DataFrame([[data, tipo, descricao, valor]], columns=["Data", "Tipo", "Descrição", "Valor"])
     st.session_state.data = pd.concat([st.session_state.data, nova_linha], ignore_index=True)
-    st.success(f"✅ {tipo} adicionada com sucesso!")
+    st.success(f"✅ {tipo} registrada com sucesso!")
 
-# --- Mostrar dados ---
+# --- Tabela e análises ---
 if not st.session_state.data.empty:
-    st.write("💰 **Resumo de Lançamentos**")
-    st.dataframe(st.session_state.data, use_container_width=True)
+    st.subheader("📋 Lançamentos")
+    df = st.session_state.data.copy()
+    df["Data"] = pd.to_datetime(df["Data"])
+    df = df.sort_values("Data")
 
-    entradas = st.session_state.data[st.session_state.data["Tipo"] == "Entrada"]["Valor"].sum()
-    saidas = st.session_state.data[st.session_state.data["Tipo"] == "Saída"]["Valor"].sum()
+    st.dataframe(df, use_container_width=True)
+
+    entradas = df[df["Tipo"] == "Entrada"]["Valor"].sum()
+    saidas = df[df["Tipo"] == "Saída"]["Valor"].sum()
     saldo = entradas - saidas
 
     st.metric("💵 Total de Entradas", f"R$ {entradas:.2f}")
@@ -102,8 +109,9 @@ if not st.session_state.data.empty:
     else:
         st.success("💸 Vou começar a te chamar de Senhora... e com voz aveludada!")
 
+    # --- Gráfico de pizza ---
     grafico = px.pie(
-        st.session_state.data,
+        df,
         names="Tipo",
         values="Valor",
         title="📊 Distribuição de Entradas e Saídas",
@@ -118,6 +126,20 @@ if not st.session_state.data.empty:
     )
 
     st.plotly_chart(grafico, use_container_width=True)
+
+    # --- Gráfico de linha por data ---
+    df_linha = df.groupby(["Data", "Tipo"])["Valor"].sum().reset_index()
+    graf_linha = px.line(
+        df_linha,
+        x="Data",
+        y="Valor",
+        color="Tipo",
+        title="📈 Evolução Financeira ao Longo do Tempo",
+        color_discrete_map={"Entrada": "#ffad60", "Saída": "#8b5e3c"},
+        markers=True
+    )
+    graf_linha.update_layout(paper_bgcolor="#f4ebe2", plot_bgcolor="#f4ebe2")
+    st.plotly_chart(graf_linha, use_container_width=True)
 
 else:
     st.info("📋 Ainda não há dados. Comece adicionando uma entrada ou saída.")
