@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 from datetime import datetime
 
 # -------------------- CONFIG GERAL --------------------
@@ -59,7 +58,10 @@ st.markdown("""
 
 # -------------------- LOGO --------------------
 with st.container():
-    st.markdown('<div class="logo-container"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" alt="Logo Café du Contrôle"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="logo-container">'
+        '<img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" alt="Logo Café du Contrôle">'
+        '</div>', unsafe_allow_html=True)
 
 # -------------------- SISTEMA FINANCEIRO --------------------
 st.header("💰 Entradas")
@@ -109,7 +111,4 @@ else:
 # -------------------- RODAPÉ COM LOGO ÉDEN --------------------
 st.markdown("---")
 st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
-
-# Adicionando logo da ÉdenMachine
-eden_logo = Image.open("/mnt/data/eden-machine-logo-removebg-preview.png")
-st.image(eden_logo, width=120)
+st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo.png", width=120)
