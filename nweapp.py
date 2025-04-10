@@ -1,7 +1,14 @@
 import streamlit as st
 import datetime
 
-# === ESTILO COMPLETO COM FUNDO, LOGO, ANIMAÇÃO E RODAPÉ ===
+# CONFIGURAÇÃO DE PÁGINA COM FAVICON
+st.set_page_config(
+    page_title="Café du Contrôle",
+    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/favicon.png",
+    layout="centered"
+)
+
+# CSS ESTILIZADO
 st.markdown(
     f"""
     <style>
@@ -11,7 +18,7 @@ st.markdown(
     }}
 
     [data-testid="stAppViewContainer"] > .main {{
-        background-color: rgba(255, 255, 255, 0.88);
+        background-color: rgba(255, 255, 255, 0.85);
         padding: 2rem;
         border-radius: 1rem;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -26,10 +33,10 @@ st.markdown(
     h1 {{
         font-size: 3em;
         font-weight: 900;
-        background: linear-gradient(145deg, #b88c66, #5c4033, #8e7c6a);
+        background: linear-gradient(145deg, #d9b58b, #5c4033, #a98b71);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         font-family: 'Georgia', serif;
     }}
 
@@ -41,7 +48,7 @@ st.markdown(
     }}
 
     div, p, label {{
-        color: #3a2f28;
+        color: #3a2f28 !important;
         font-family: 'Georgia', serif;
     }}
 
@@ -50,6 +57,7 @@ st.markdown(
         border-radius: 8px;
         border: 1px solid #dcbfa8;
         padding: 0.5em;
+        color: #3a2f28 !important;
     }}
 
     .stButton>button {{
@@ -86,7 +94,7 @@ st.markdown(
     }}
     </style>
 
-    <!-- LOGO personalizada -->
+    <!-- LOGO -->
     <img id="logo" src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe-du-controle.png">
 
     <!-- RODAPÉ -->
@@ -97,7 +105,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === CONTEÚDO DO APP ===
+# CONTEÚDO DO APP
 st.title("☕ Café du Contrôle")
 st.subheader("Toma um café e organiza teu dinheiro, mulher!")
 
@@ -121,8 +129,9 @@ st.write(f"**Saídas**: R$ {saidas:.2f}")
 st.write(f"**Saldo**: R$ {saldo:.2f}")
 
 if saldo < 0:
-    st.error("Tá plantando dinheiro, né linda?")
+    st.error("🌧️ Tá plantando dinheiro, né linda?")
 elif saldo > 0:
-    st.success("Vou começar a te chamar de Senhora... e com voz aveludada!")
+    st.success("💅 Vou começar a te chamar de Senhora... e com voz aveludada!")
 else:
-    st.info("Equilibrou tudo hoje. Igual coração de mãe!")
+    st.info("🧘‍♀️ Equilibrou tudo hoje. Igual coração de mãe!")
+
