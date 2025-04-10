@@ -206,7 +206,7 @@ elif menu == "Ajuda ☕":
 # -------------------- RODAPÉ --------------------
 st.markdown("""
 ---
-<center><small style='font-size:8px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
-<img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="80">
+<center><small style='font-size:12px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+<img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="100">
 </center>
 """, unsafe_allow_html=True)
