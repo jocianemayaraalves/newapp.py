@@ -1,73 +1,3 @@
-import streamlit as st
-import pandas as pd
-from fpdf import FPDF
-from datetime import datetime, date
-import matplotlib.pyplot as plt
-import streamlit_authenticator as stauth
-import yaml
-
-# -------------------- CONFIG GERAL --------------------
-st.set_page_config(
-    page_title="Café du Contrôle ☕",
-    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe-icon.ico",  # URL do ícone
-    layout="wide"
-)
-
-# -------------------- FUNÇÃO: FUNDO --------------------
-def set_background_from_url(image_url):
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("{image_url}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        .block-container {{
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }}
-        .main > div {{
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 2rem;
-            border-radius: 12px;
-        }}
-        h1, h2, h3 {{
-            color: #fefefe !important;
-            text-shadow: 1px 1px 4px #000000cc;
-        }}
-        .stMarkdown, .stTextInput > label, .stNumberInput > label {{
-            color: #fdfdfd !important;
-        }}
-        .saldo-box {{
-            background-color: rgba(255, 255, 0, 0.4);
-            padding: 10px;
-            border-radius: 10px;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 10px;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
-
-# -------------------- LOGO --------------------
-with st.container():
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
 # -------------------- LOGIN --------------------
 # Defina os dados de autenticação
 auth_config = {
@@ -94,8 +24,8 @@ try:
         key=auth_config['cookie']['key'],
         cookie_expiry_days=auth_config['cookie']['expiry_days']
     )
-    # Realizar login
-    name, authentication_status, username = authenticator.login('Login', 'main')
+    # Realizar login - ajuste para "main"
+    name, authentication_status, username = authenticator.login('Login', location='main')
 
     if authentication_status:
         st.write(f'Olá, {name}! Bem-vindo de volta!')
