@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 from datetime import date
 
 # === Estilos personalizados ===
@@ -7,7 +6,7 @@ st.markdown("""
     <style>
         /* Plano de fundo */
         .stApp {
-            background-image: url('https://raw.githubusercontent.com/seu-usuario/cafe-du-controle/main/bg.png');
+            background-image: url('https://raw.githubusercontent.com/jocianemayaraalves/cafe-du-controle/main/bg.png');
             background-size: cover;
             background-attachment: fixed;
         }
@@ -34,7 +33,11 @@ st.markdown("""
             color: #000000;
         }
 
-        /* Caixa de data */
+        .stNumberInput>div>div>input {
+            background-color: #ffffffcc;
+            color: #000000;
+        }
+
         .stDateInput>div>div>input {
             background-color: #ffffffcc;
             color: #000000;
@@ -50,9 +53,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# === Logo ===
-logo = Image.open("logo.png")
-st.image(logo, width=250)
+# === Logo via URL ===
+st.image("https://raw.githubusercontent.com/jocianemayaraalves/cafe-du-controle/main/logo-cafe.png", width=250)
 
 # === Título e Mensagem ===
 st.markdown("<h1 style='text-align: center;'>Café du Contrôle</h1>", unsafe_allow_html=True)
