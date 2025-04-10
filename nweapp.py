@@ -80,16 +80,19 @@ CREATE TABLE IF NOT EXISTS relatorios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     data DATE,
     entradas FLOAT,
+    tipo_entrada TEXT,
+    descricao_saida TEXT,
     saidas FLOAT,
-    saldo FLOAT
+    saldo FLOAT,
+    contas_futuras FLOAT
 )
 """)
 conn.commit()
 
 # Função para salvar os relatórios no banco de dados
-def salvar_relatorio(data, entradas, saidas, saldo):
-    cursor.execute("INSERT INTO relatorios (data, entradas, saidas, saldo) VALUES (?, ?, ?, ?)",
-                   (data, entradas, saidas, saldo))
+def salvar_relatorio(data, entradas, tipo_entrada, descricao_saida, saidas, saldo, contas_futuras):
+    cursor.execute("INSERT INTO relatorios (data, entradas, tipo_entrada, descricao_saida, saidas, saldo, contas_futuras) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (data, entradas, tipo_entrada, descricao_saida, saidas, saldo, contas_futuras))
     conn.commit()
 
 # Função para recuperar relatórios do banco de dados
@@ -103,14 +106,16 @@ menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "G
 # -------------------- RESUMO DIÁRIO --------------------
 if menu == "Resumo Diário":
     st.header("💰 Entradas")
-    salario = st.number_input("Salário", min_value=0.0, step=100.0)
-    renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
-    total_entradas = salario + renda_extra
+    tipo_entrada = st.selectbox("Tipo de Entrada", ["PIX", "Dinheiro Físico", "Transferência", "Outros"])
+    valor_entrada = st.number_input("Valor da Entrada", min_value=0.0, step=50.0)
+    total_entradas = valor_entrada
 
     st.header("💸 Gastos")
-    fixos = st.number_input("Gastos Fixos", min_value=0.0, step=100.0)
-    extras = st.number_input("Gastos Variáveis", min_value=0.0, step=50.0)
-    total_saidas = fixos + extras
+    descricao_saida = st.text_input("Descrição do Gasto")
+    valor_saida = st.number_input("Valor do Gasto", min_value=0.0, step=50.0)
+    total_saidas = valor_saida
+
+    contas_futuras = st.number_input("Total de Contas Futura (Cartão/Empréstimo)", min_value=0.0, step=50.0)
 
     saldo = total_entradas - total_saidas
 
@@ -133,7 +138,7 @@ if menu == "Resumo Diário":
 
     if st.button("💾 Salvar relatório do dia"):
         st.success("Relatório salvo com sucesso!")
-        salvar_relatorio(data_lancamento, total_entradas, total_saidas, saldo)
+        salvar_relatorio(data_lancamento, total_entradas, tipo_entrada, descricao_saida, total_saidas, saldo, contas_futuras)
 
 # -------------------- RELATÓRIOS --------------------
 elif menu == "Relatórios":
@@ -141,7 +146,7 @@ elif menu == "Relatórios":
     relatorios = recuperar_relatorios()
     
     if relatorios:
-        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Tipo Entrada", "Descrição Saída", "Saídas", "Saldo", "Contas Futuras"])
         st.dataframe(df)
     else:
         st.info("Nenhum relatório salvo ainda.")
@@ -152,7 +157,7 @@ elif menu == "Gerar PDF":
     relatorios = recuperar_relatorios()
 
     if relatorios:
-        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Tipo Entrada", "Descrição Saída", "Saídas", "Saldo", "Contas Futuras"])
 
         data_inicial = st.date_input("Data inicial", value=df['Data'].min())
         data_final = st.date_input("Data final", value=df['Data'].max())
@@ -179,10 +184,10 @@ elif menu == "Carteira":
     relatorios = recuperar_relatorios()
 
     if relatorios:
-        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Saídas", "Saldo"])
+        df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Tipo Entrada", "Descrição Saída", "Saídas", "Saldo", "Contas Futuras"])
         df["Data"] = pd.to_datetime(df["Data"])
         df["Mês"] = df["Data"].dt.strftime("%B")
-        df_mes = df.groupby("Mês")[["Entradas", "Saídas", "Saldo"]].sum().reset_index()
+        df_mes = df.groupby("Mês")[["Entradas", "Saídas", "Saldo", "Contas Futuras"]].sum().reset_index()
         st.dataframe(df_mes)
         st.bar_chart(df_mes.set_index("Mês")["Saldo"])
     else:
@@ -201,7 +206,7 @@ elif menu == "Ajuda ☕":
 # -------------------- RODAPÉ --------------------
 st.markdown("""
 ---
-<center><small style='font-size:10px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+<center><small style='font-size:8px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
 <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="80">
 </center>
 """, unsafe_allow_html=True)
