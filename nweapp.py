@@ -111,4 +111,4 @@ else:
 # -------------------- RODAPÉ COM LOGO ÉDEN --------------------
 st.markdown("---")
 st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
-st.image("https://github.com/jocianemayaraalves/newapp.py/blob/main/eden-machine-logo-removebg-preview.png", width=120)
+st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png", width=120)
