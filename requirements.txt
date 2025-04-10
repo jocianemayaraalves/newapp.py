@@ -4,3 +4,4 @@ fpdf
 Pillow
 matplotlib
 plotly
+streamlit-authenticator
