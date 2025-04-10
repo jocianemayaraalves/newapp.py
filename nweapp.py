@@ -5,13 +5,11 @@ import datetime
 st.markdown(
     f"""
     <style>
-    /* Fundo do app */
     .stApp {{
         background: url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/fundo-cafe-anime.jpg") no-repeat center center fixed;
         background-size: cover;
     }}
 
-    /* Container com animação de fade-in */
     [data-testid="stAppViewContainer"] > .main {{
         background-color: rgba(255, 255, 255, 0.88);
         padding: 2rem;
@@ -25,7 +23,6 @@ st.markdown(
         to {{ opacity: 1; transform: translateY(0); }}
     }}
 
-    /* Título com efeito metálico */
     h1 {{
         font-size: 3em;
         font-weight: 900;
@@ -36,7 +33,6 @@ st.markdown(
         font-family: 'Georgia', serif;
     }}
 
-    /* Subtítulo */
     h2, .stSubheader {{
         color: #4e3b2c;
         font-size: 1.3em;
@@ -44,13 +40,11 @@ st.markdown(
         text-shadow: 1px 1px 1px #fff4ec;
     }}
 
-    /* Texto e labels */
     div, p, label {{
         color: #3a2f28;
         font-family: 'Georgia', serif;
     }}
 
-    /* Inputs */
     input, textarea, select {{
         background-color: rgba(255,255,255,0.95);
         border-radius: 8px;
@@ -58,7 +52,6 @@ st.markdown(
         padding: 0.5em;
     }}
 
-    /* Botões */
     .stButton>button {{
         background-color: #dc9c68;
         color: white;
@@ -71,17 +64,15 @@ st.markdown(
         transform: scale(1.05);
     }}
 
-    /* LOGO NO TOPO */
     #logo {{
         position: fixed;
         top: 10px;
         left: 20px;
-        width: 80px;
+        width: 120px;
         z-index: 100;
         opacity: 0.95;
     }}
 
-    /* Rodapé */
     footer {{
         position: fixed;
         bottom: 10px;
@@ -95,8 +86,8 @@ st.markdown(
     }}
     </style>
 
-    <!-- LOGO -->
-    <img id="logo" src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png">
+    <!-- LOGO personalizada -->
+    <img id="logo" src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe-du-controle.png">
 
     <!-- RODAPÉ -->
     <footer>
