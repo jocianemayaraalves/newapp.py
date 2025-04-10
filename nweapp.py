@@ -5,13 +5,9 @@ from datetime import datetime, date
 import matplotlib.pyplot as plt
 import sqlite3
 from PIL import Image
-import requests
-from io import BytesIO
 
 # -------------------- CONFIG GERAL --------------------
-favicon_url = "https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/favicon.png"
-response = requests.get(favicon_url)
-favicon = Image.open(BytesIO(response.content))
+favicon = Image.open("favicon.png")
 
 st.set_page_config(
     page_title="Café du Contrôle ☕",
