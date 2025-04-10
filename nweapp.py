@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date
-import sqlite3
-import matplotlib.pyplot as plt
 from fpdf import FPDF
+from datetime import datetime, date
+import matplotlib.pyplot as plt
+import sqlite3
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
     page_title="Café du Contrôle ☕",
-    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe-icon.ico",  # URL do ícone
+    page_icon=":coffee:",
     layout="wide"
 )
 
@@ -56,19 +56,7 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- LOGO --------------------
-with st.container():
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
 # -------------------- FUNÇÕES DO BANCO DE DADOS --------------------
-
 def criar_tabela():
     """Cria a tabela de relatórios se não existir"""
     conn = sqlite3.connect('relatorios.db')
@@ -108,7 +96,17 @@ def carregar_dados():
 # Criar a tabela no banco de dados
 criar_tabela()
 
-# -------------------- DADOS DO USUÁRIO --------------------
+# -------------------- LOGO --------------------
+with st.container():
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 data_lancamento = st.date_input("📅 Selecione a data do lançamento:", value=date.today())
 
 # -------------------- SIDEBAR --------------------
@@ -212,3 +210,11 @@ elif menu == "Ajuda ☕":
     - **Gerar PDF**: baixe relatórios com gráficos.
     - **Carteira**: veja quanto ainda tem de saldo no mês.
     """)
+
+# -------------------- RODAPÉ --------------------
+st.markdown("""
+---
+<center><small style='font-size:10px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
+<img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/refs/heads/main/eden-machine-logo-removebg-preview.png" width="80">
+</center>
+""", unsafe_allow_html=True)
