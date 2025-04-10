@@ -1,64 +1,47 @@
 import streamlit as st
 from datetime import date
 
-# === Estilos personalizados ===
+# === Estilo personalizado ===
 st.markdown("""
     <style>
-        /* Plano de fundo */
         .stApp {
-            background-image: url('https://raw.githubusercontent.com/jocianemayaraalves/cafe-du-controle/main/bg.png');
+            background-image: url('https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png');
             background-size: cover;
             background-attachment: fixed;
         }
 
-        /* Títulos com brilho */
         h1, h2, h3 {
             color: #ffffff;
-            text-shadow: 2px 2px 5px #000000, 0 0 10px #d9a441;
+            text-shadow: 2px 2px 4px #8B4513, 0 0 5px #FFD700;
         }
 
-        /* Textos gerais */
-        .css-10trblm, .css-1v3fvcr {
-            color: #f2f2f2 !important;
+        label, .css-1cpxqw2 {
+            color: #f5f5f5 !important;
         }
 
-        label {
-            color: #f0f0f0 !important;
-            font-weight: bold;
-        }
-
-        /* Caixa de entrada */
-        .stTextInput>div>div>input {
-            background-color: #ffffffcc;
-            color: #000000;
-        }
-
-        .stNumberInput>div>div>input {
-            background-color: #ffffffcc;
-            color: #000000;
-        }
-
+        .stTextInput>div>div>input,
+        .stNumberInput>div>div>input,
         .stDateInput>div>div>input {
-            background-color: #ffffffcc;
+            background-color: #ffffffdd;
             color: #000000;
         }
 
-        /* Mensagem inicial */
         .mensagem-inicial {
             font-size: 20px;
             font-weight: bold;
             color: #ffffff;
-            text-shadow: 1px 1px 3px #000000;
+            text-shadow: 1px 1px 2px #000000;
+            text-align: center;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# === Logo via URL ===
-st.image("https://raw.githubusercontent.com/jocianemayaraalves/cafe-du-controle/main/logo-cafe.png", width=250)
+# === Logo atualizado ===
+st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png", width=250)
 
-# === Título e Mensagem ===
+# === Título e saudação ===
 st.markdown("<h1 style='text-align: center;'>Café du Contrôle</h1>", unsafe_allow_html=True)
-st.markdown("<p class='mensagem-inicial' style='text-align: center;'>Toma um café e organiza teu dinheiro, mulher!</p>", unsafe_allow_html=True)
+st.markdown("<p class='mensagem-inicial'>Toma um café e organiza teu dinheiro, mulher!</p>", unsafe_allow_html=True)
 
 # === Entradas ===
 st.subheader("📥 Entradas")
@@ -78,14 +61,14 @@ saldo = entradas - saidas
 
 # === Resultado ===
 st.subheader("🧾 Resumo do Dia:")
-st.markdown(f"<p style='color: #f0f0f0;'>Entradas: R${entradas:.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p style='color: #f0f0f0;'>Saídas: R${saidas:.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p style='color: #f0f0f0; font-weight: bold;'>Saldo: R${saldo:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #f5f5f5;'>Entradas: R${entradas:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #f5f5f5;'>Saídas: R${saidas:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #ffffff; font-weight: bold;'>Saldo: R${saldo:.2f}</p>", unsafe_allow_html=True)
 
-# === Mensagens engraçadas ===
+# === Mensagens de humor ===
 if saldo < 0:
     st.markdown("<p style='color: #ffcccc;'>Tá plantando dinheiro, né linda?</p>", unsafe_allow_html=True)
 elif saldo > 0:
     st.markdown("<p style='color: #ccffcc;'>Vou começar a te chamar de Senhora... e com voz aveludada!</p>", unsafe_allow_html=True)
 else:
-    st.markdown("<p style='color: #ffffcc;'>Dia neutro, mas com café fica melhor!</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #ffffcc;'>Dia neutro, mas com café tudo fica mais leve!</p>", unsafe_allow_html=True)
