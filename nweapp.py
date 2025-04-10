@@ -133,10 +133,14 @@ elif menu == "Ajuda ☕":
     """)
 
 # -------------------- RODAPÉ --------------------
-st.markdown("---")
-st.markdown("""
-    <div style="text-align: center;">
-        <small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small><br>
-        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="100">
+st.markdown("---", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style='text-align: center;'>
+        <p style='margin-bottom: 4px;'>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></p>
+        <img src='https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png' width='120'>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
+
