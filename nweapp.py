@@ -1,22 +1,6 @@
-# -------------------- LOGIN --------------------
-# Defina os dados de autenticação
-auth_config = {
-    'credentials': {
-        'usernames': {
-            'admin': {
-                'email': 'admin@exemplo.com',
-                'password': 'admin123'
-            }
-        }
-    },
-    'cookie': {
-        'expiry_days': 30,
-        'key': 'some_signature_key',
-        'name': 'some_cookie_name'
-    }
-}
+import traceback
 
-# Tente inicializar o autentificador e capturar erros
+# -------------------- LOGIN --------------------
 try:
     authenticator = stauth.Authenticate(
         credentials=auth_config['credentials'],
@@ -153,4 +137,6 @@ try:
         st.warning('Por favor, faça o login para acessar o aplicativo.')
 
 except Exception as e:
-    st.error(f'Ocorreu um erro durante a autenticação. Detalhes do erro: {e}')
+    # Imprimir o traceback completo do erro no console para fins de depuração
+    st.write("Ocorreu um erro durante a autenticação. Verifique os logs para detalhes.")
+    st.write(traceback.format_exc())  # Exibe o traceback completo do erro no console
