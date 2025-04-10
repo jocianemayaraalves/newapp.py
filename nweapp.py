@@ -11,7 +11,7 @@ favicon = Image.open("favicon.png")
 
 st.set_page_config(
     page_title="Café du Contrôle ☕",
-    page_icon=favicon,
+    page_icon="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/favicon.png",
     layout="wide"
 )
 
