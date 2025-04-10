@@ -1,9 +1,9 @@
+
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 from datetime import datetime, date
 import matplotlib.pyplot as plt
-import sqlite3
 
 # -------------------- CONFIG GERAL --------------------
 st.set_page_config(
@@ -56,46 +56,6 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- FUNÇÕES DO BANCO DE DADOS --------------------
-def criar_tabela():
-    """Cria a tabela de relatórios se não existir"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS relatorios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            data TEXT,
-            entradas REAL,
-            saidas REAL,
-            saldo REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def salvar_dados(data, entradas, saidas, saldo):
-    """Salva um novo relatório no banco de dados"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO relatorios (data, entradas, saidas, saldo)
-        VALUES (?, ?, ?, ?)
-    """, (data, entradas, saidas, saldo))
-    conn.commit()
-    conn.close()
-
-def carregar_dados():
-    """Carrega todos os relatórios salvos no banco de dados"""
-    conn = sqlite3.connect('relatorios.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM relatorios ORDER BY data DESC")
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
-
-# Criar a tabela no banco de dados
-criar_tabela()
-
 # -------------------- LOGO --------------------
 with st.container():
     st.markdown(
@@ -108,6 +68,10 @@ with st.container():
     )
 
 data_lancamento = st.date_input("📅 Selecione a data do lançamento:", value=date.today())
+
+# Inicializa os dados salvos
+if "relatorios" not in st.session_state:
+    st.session_state.relatorios = []
 
 # -------------------- SIDEBAR --------------------
 menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "Gerar PDF", "Carteira", "Ajuda ☕"])
@@ -145,21 +109,20 @@ if menu == "Resumo Diário":
 
     if st.button("💾 Salvar relatório do dia"):
         st.success("Relatório salvo com sucesso!")
-        salvar_dados(data_lancamento.strftime('%d/%m/%Y'), total_entradas, total_saidas, saldo)
+        st.session_state.relatorios.append({
+            "data": data_lancamento,
+            "entradas": total_entradas,
+            "saidas": total_saidas,
+            "saldo": saldo
+        })
 
 # -------------------- RELATÓRIOS --------------------
 elif menu == "Relatórios":
     st.header("📂 Relatórios Salvos")
-    dados_salvos = carregar_dados()
-
-    if dados_salvos:
-        st.write("Relatórios Salvos:")
-        for dado in dados_salvos:
-            st.markdown(f"**Data:** {dado[1]}")
-            st.markdown(f"**Entradas:** R$ {dado[2]:,.2f}")
-            st.markdown(f"**Saídas:** R$ {dado[3]:,.2f}")
-            st.markdown(f"**Saldo:** R$ {dado[4]:,.2f}")
-            st.markdown("---")
+    df = pd.DataFrame(st.session_state.relatorios)
+    if not df.empty:
+        df['data'] = pd.to_datetime(df['data'])
+        st.dataframe(df.sort_values(by="data", ascending=False))
     else:
         st.info("Nenhum relatório salvo ainda.")
 
