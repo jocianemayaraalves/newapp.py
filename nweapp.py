@@ -1,3 +1,80 @@
+import streamlit as st
+import pandas as pd
+from fpdf import FPDF
+from datetime import datetime, date
+import matplotlib.pyplot as plt
+
+# -------------------- CONFIG GERAL --------------------
+st.set_page_config(
+    page_title="Café du Contrôle ☕",
+    page_icon=":coffee:",
+    layout="wide"
+)
+
+# -------------------- FUNÇÃO: FUNDO --------------------
+def set_background_from_url(image_url):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("{image_url}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        .block-container {{
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }}
+        .main > div {{
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 12px;
+        }}
+        h1, h2, h3 {{
+            color: #fefefe !important;
+            text-shadow: 1px 1px 4px #000000cc;
+        }}
+        .stMarkdown, .stTextInput > label, .stNumberInput > label {{
+            color: #fdfdfd !important;
+        }}
+        .saldo-box {{
+            background-color: rgba(255, 255, 0, 0.4);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
+
+# -------------------- LOGO --------------------
+with st.container():
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+data_lancamento = st.date_input("📅 Selecione a data do lançamento:", value=date.today())
+
+# Inicializa os dados salvos
+if "relatorios" not in st.session_state:
+    st.session_state.relatorios = []
+
+# -------------------- SIDEBAR --------------------
+menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "Gerar PDF", "Carteira", "Ajuda ☕"])
+
 # -------------------- RESUMO DIÁRIO --------------------
 if menu == "Resumo Diário":
     st.header("💰 Entradas")
@@ -62,29 +139,28 @@ elif menu == "Gerar PDF":
         st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['saldo'].idxmax()]['data'].strftime('%d/%m/%Y')}")
         st.markdown(f"- **Maior gasto:** R$ {df_filtrado['saidas'].max():,.2f}")
 
-        # PDF Generation Logic
-        if st.button("Gerar PDF"):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font('Arial', 'B', 16)
-
-            # Cabeçalho com a logo do Café
-            pdf.image('logo-cafe.png', 10, 8, 33)  # Ajuste a imagem conforme necessário
-            pdf.ln(20)
-            pdf.cell(200, 10, "Relatório Café du Contrôle", ln=True, align='C')
-            pdf.ln(10)
-
-            # Conteúdo do Relatório
-            pdf.set_font('Arial', '', 12)
-            for index, row in df_filtrado.iterrows():
-                pdf.cell(200, 10, f"{row['data'].strftime('%d/%m/%Y')} - Entrada: R$ {row['entradas']} | Gasto: R$ {row['saidas']} | Saldo: R$ {row['saldo']}", ln=True)
-
-            # Logo da ÉdenMachine no rodapé
-            pdf.ln(20)
-            pdf.image('logo-eden.png', 10, 250, 33)  # Ajuste a imagem conforme necessário
-            pdf.output("relatorio.pdf")
-
-            st.success("PDF gerado com sucesso!")
-
     else:
         st.warning("Nenhum dado disponível para gerar PDF.")
+
+# -------------------- CARTEIRA --------------------
+elif menu == "Carteira":
+    st.header("💼 Saldo em Carteira por Mês")
+    df = pd.DataFrame(st.session_state.relatorios)
+    if not df.empty:
+        df["data"] = pd.to_datetime(df["data"])
+        df["mes"] = df["data"].dt.strftime("%B")
+        df_mes = df.groupby("mes")[["entradas", "saidas", "saldo"]].sum().reset_index()
+        st.dataframe(df_mes)
+        st.bar_chart(df_mes.set_index("mes")["saldo"])
+    else:
+        st.info("Sem dados ainda. Salve relatórios no Resumo Diário.")
+
+# -------------------- AJUDA --------------------
+elif menu == "Ajuda ☕":
+    st.header("❓ Ajuda e Dicas")
+    st.markdown("""
+    - **Resumo Diário**: registre entradas e gastos do dia.
+    - **Relatórios**: veja seus lançamentos anteriores.
+    - **Gerar PDF**: baixe relatórios com gráficos.
+    - **Carteira**: veja quanto ainda tem de saldo no mês.
+    """)
