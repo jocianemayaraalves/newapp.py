@@ -4,11 +4,18 @@ from fpdf import FPDF
 from datetime import datetime, date
 import matplotlib.pyplot as plt
 import sqlite3
+from PIL import Image
+import requests
+from io import BytesIO
 
 # -------------------- CONFIG GERAL --------------------
+favicon_url = "https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/favicon.png"
+response = requests.get(favicon_url)
+favicon = Image.open(BytesIO(response.content))
+
 st.set_page_config(
     page_title="Café du Contrôle ☕",
-    page_icon=":coffee:",
+    page_icon=favicon,
     layout="wide"
 )
 
