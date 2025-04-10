@@ -1,186 +1,163 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
 from fpdf import FPDF
 import matplotlib.pyplot as plt
-import io
+import plotly.express as px
 from PIL import Image
 import base64
 
-# Configuração da página
-st.set_page_config(layout="wide", page_title="Café du Contrôle")
+st.set_page_config(layout="wide")
 
-# Funções auxiliares
-def carregar_dados():
-    if "dados" not in st.session_state:
-        st.session_state["dados"] = []
-    return st.session_state["dados"]
+if 'dados' not in st.session_state:
+    st.session_state['dados'] = pd.DataFrame(columns=['Data', 'Tipo', 'Categoria', 'Valor'])
 
-def salvar_dados(data, tipo, descricao, valor):
-    st.session_state["dados"].append({"Data": data, "Tipo": tipo, "Descrição": descricao, "Valor": valor})
+def adicionar_dado(data, tipo, categoria, valor):
+    novo_dado = pd.DataFrame({'Data': [data], 'Tipo': [tipo], 'Categoria': [categoria], 'Valor': [valor]})
+    st.session_state['dados'] = pd.concat([st.session_state['dados'], novo_dado], ignore_index=True)
 
-def gerar_pdf(dados, periodo=None):
+def salvar_relatorio_pdf(data):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Relatório Financeiro", ln=True, align="C")
-    if periodo:
-        pdf.cell(200, 10, txt=f"Período: {periodo[0]} a {periodo[1]}", ln=True, align="C")
+    pdf.cell(200, 10, txt=f"Relatório do Dia {data.strftime('%d/%m/%Y')}", ln=True, align='C')
     pdf.ln(10)
-    for item in dados:
-        pdf.cell(200, 10, txt=f"{item['Data']} - {item['Tipo']} - {item['Descrição']}: R$ {item['Valor']:.2f}", ln=True)
-    return pdf.output(dest='S').encode('latin1')
 
-def salvar_pdf_download(data_bytes, filename):
-    b64 = base64.b64encode(data_bytes).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">📄 Baixar PDF</a>'
-    return href
+    df_dia = st.session_state['dados']
+    df_dia = df_dia[df_dia['Data'] == data.strftime('%d/%m/%Y')]
 
-# Estilo CSS
+    for index, row in df_dia.iterrows():
+        linha = f"{row['Data']} - {row['Tipo']} - {row['Categoria']} - R$ {row['Valor']:.2f}"
+        pdf.cell(200, 10, txt=linha, ln=True)
+
+    total = df_dia[df_dia['Tipo'] == 'Entrada']['Valor'].sum() - df_dia[df_dia['Tipo'] == 'Gasto']['Valor'].sum()
+    pdf.ln(10)
+    pdf.set_font("Arial", style='B', size=12)
+    pdf.cell(200, 10, txt=f"Saldo do dia: R$ {total:.2f}", ln=True)
+
+    pdf.output("relatorio_dia.pdf")
+
+# Sidebar com abas interativas
+menu = st.sidebar.radio("Menu", ["Lançamentos", "Dashboard", "Relatórios"])
+
+# Logo do Café
 st.markdown("""
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
+        .logo-cafe {
+            width: 250px;
+            display: block;
+            margin: 0 auto 10px auto;
         }
-        .main {
-            background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d') no-repeat center center fixed;
-            background-size: cover;
+        .logo-eden {
+            width: 130px;
+            display: block;
+            margin: 20px auto 0 auto;
         }
-        .sidebar .sidebar-content {
-            background-color: #f8f4ed;
-            color: #333;
-        }
-        .sidebar .sidebar-content span, .sidebar .sidebar-content label {
-            color: #333 !important;
-        }
-        .saldo-box {
-            background-color: rgba(255, 230, 0, 0.2);
-            padding: 15px;
+        .saldo-container {
+            background-color: rgba(255, 255, 0, 0.3);
+            padding: 10px;
             border-radius: 10px;
-            color: #333;
-            font-size: 20px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         .saldo-text {
-            color: #000;
+            color: #222;
             font-weight: bold;
+            font-size: 18px;
         }
-        .section-title {
+        .titulo-claro {
             color: white;
-            font-size: 22px;
-            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Logo do café e da empresa
-st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/cafe_logo.png", use_container_width=True)
-st.markdown("##")
-st.image("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png", width=100)
+st.image("cafe_logo.png", use_column_width=False, output_format="auto", width=250)
+st.markdown(f"<div style='text-align: center;'>{date.today().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
-# Data retroativa
-data_atual = st.date_input("Selecione a data:", value=datetime.today())
+# Lançamentos
+if menu == "Lançamentos":
+    st.markdown("<h2 class='titulo-claro'>Lançamentos</h2>", unsafe_allow_html=True)
 
-# Menu lateral
-aba = st.sidebar.radio("Menu", ["☕ Lançamentos", "📊 Dashboard", "📁 Relatórios"])
+    data = st.date_input("Data", value=date.today())
+    tipo = st.radio("Tipo", ["Entrada", "Gasto"])
+    categoria = st.text_input("Categoria")
+    valor = st.number_input("Valor", min_value=0.0, step=0.01)
 
-dados = carregar_dados()
+    if st.button("Adicionar"):
+        adicionar_dado(data.strftime('%d/%m/%Y'), tipo, categoria, valor)
+        st.success("Lançamento adicionado com sucesso!")
 
-# Aba: Lançamentos
-if aba == "☕ Lançamentos":
-    with st.form("form_lancamento"):
-        tipo = st.selectbox("Tipo", ["Entrada", "Gasto"])
-        descricao = st.text_input("Descrição")
-        valor = st.number_input("Valor", min_value=0.01, format="%.2f")
-        enviar = st.form_submit_button("Adicionar")
-        if enviar:
-            salvar_dados(data_atual.strftime("%Y-%m-%d"), tipo, descricao, valor)
-            st.success("Lançamento adicionado com sucesso!")
-
-    # Mostrar lançamentos do dia
-    df = pd.DataFrame(dados)
-    df_dia = df[df["Data"] == data_atual.strftime("%Y-%m-%d")]
-    entradas = df_dia[df_dia["Tipo"] == "Entrada"]["Valor"].sum()
-    gastos = df_dia[df_dia["Tipo"] == "Gasto"]["Valor"].sum()
-    saldo = entradas - gastos
-
-    st.markdown("<div class='section-title'>Entradas</div>", unsafe_allow_html=True)
-    st.write(f"R$ {entradas:.2f}")
-
-    st.markdown("<div class='section-title'>Gastos</div>", unsafe_allow_html=True)
-    st.write(f"R$ {gastos:.2f}")
-
-    st.markdown("<div class='section-title'>Resumo do Dia</div>", unsafe_allow_html=True)
-
-    st.markdown(f"<div class='saldo-box'><span class='saldo-text'>Saldo do Dia: R$ {saldo:.2f}</span></div>", unsafe_allow_html=True)
-
-    # Botão de salvar relatório do dia
-    if st.button("📄 Salvar Relatório do Dia"):
-        pdf_bytes = gerar_pdf(df_dia.to_dict('records'))
-        st.markdown(salvar_pdf_download(pdf_bytes, f"relatorio_{data_atual}.pdf"), unsafe_allow_html=True)
-
-# Aba: Dashboard
-elif aba == "📊 Dashboard":
-    st.title("📈 Visão Geral Financeira")
-    if not dados:
-        st.warning("Nenhum dado cadastrado ainda.")
+    if st.session_state['dados'].empty:
+        st.info("Nenhum dado lançado ainda.")
     else:
-        df = pd.DataFrame(dados)
-        df["Valor"] = pd.to_numeric(df["Valor"])
-        df["Data"] = pd.to_datetime(df["Data"])
+        st.markdown("<h3 class='titulo-claro'>Resumo do Dia</h3>", unsafe_allow_html=True)
+        df_dia = st.session_state['dados']
+        df_dia['Data'] = pd.to_datetime(df_dia['Data'], dayfirst=True)
+        df_dia = df_dia[df_dia['Data'] == pd.to_datetime(data)]
 
-        periodo = st.date_input("Selecione o período", [df["Data"].min(), df["Data"].max()])
-        df_periodo = df[(df["Data"] >= pd.to_datetime(periodo[0])) & (df["Data"] <= pd.to_datetime(periodo[1]))]
+        entradas = df_dia[df_dia['Tipo'] == 'Entrada']['Valor'].sum()
+        gastos = df_dia[df_dia['Tipo'] == 'Gasto']['Valor'].sum()
+        saldo = entradas - gastos
 
-        if df_periodo.empty:
-            st.info("Sem dados nesse período.")
-        else:
-            entradas = df_periodo[df_periodo["Tipo"] == "Entrada"]["Valor"].sum()
-            gastos = df_periodo[df_periodo["Tipo"] == "Gasto"]["Valor"].sum()
-            saldo = entradas - gastos
+        st.markdown("<div class='saldo-container'>", unsafe_allow_html=True)
+        st.markdown(f"<div class='saldo-text'>Entradas: R$ {entradas:.2f}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='saldo-text'>Gastos: R$ {gastos:.2f}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='saldo-text'>Saldo do dia: R$ {saldo:.2f}</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            st.markdown(f"### 💰 Entradas: R$ {entradas:.2f}")
-            st.markdown(f"### 🧾 Gastos: R$ {gastos:.2f}")
-            st.markdown(f"### 💎 Saldo: R$ {saldo:.2f}")
+        if st.button("Salvar relatório do dia"):
+            salvar_relatorio_pdf(pd.to_datetime(data))
+            st.success("Relatório salvo com sucesso!")
 
-            # Gráfico de pizza
-            fig1, ax1 = plt.subplots()
-            ax1.pie([entradas, gastos], labels=["Entradas", "Gastos"], autopct='%1.1f%%', startangle=90, colors=["#90ee90", "#ff9999"])
-            ax1.axis("equal")
-            st.pyplot(fig1)
+# Dashboard
+elif menu == "Dashboard":
+    st.markdown("<h2 class='titulo-claro'>Dashboard</h2>", unsafe_allow_html=True)
+    periodo = st.date_input("Selecione o período", value=(date.today(), date.today()))
 
-            # Gráfico de linha
-            df_linha = df_periodo.groupby(["Data", "Tipo"])["Valor"].sum().unstack().fillna(0)
-            fig2, ax2 = plt.subplots()
-            df_linha.plot(ax=ax2, marker='o')
-            ax2.set_title("Fluxo Diário")
-            ax2.set_ylabel("R$ Valor")
-            st.pyplot(fig2)
+    df_periodo = st.session_state['dados'].copy()
+    df_periodo['Data'] = pd.to_datetime(df_periodo['Data'], errors='coerce', dayfirst=True)
+    df_filtrado = df_periodo[(df_periodo['Data'] >= periodo[0]) & (df_periodo['Data'] <= periodo[1])]
 
-            # Texto explicativo
-            if saldo > 0:
-                st.success("Parabéns! Sua saúde financeira neste período está positiva. Continue assim!")
-            elif saldo < 0:
-                st.error("Atenção! Você gastou mais do que ganhou neste período.")
-            else:
-                st.info("Equilíbrio total! Nem lucro, nem prejuízo.")
+    if not df_filtrado.empty:
+        entradas = df_filtrado[df_filtrado['Tipo'] == 'Entrada']['Valor'].sum()
+        gastos = df_filtrado[df_filtrado['Tipo'] == 'Gasto']['Valor'].sum()
+        saldo = entradas - gastos
 
-# Aba: Relatórios
-elif aba == "📁 Relatórios":
-    st.title("📄 Gerar Relatório por Período")
-    if not dados:
-        st.warning("Você ainda não cadastrou nenhum dado.")
-    else:
-        df = pd.DataFrame(dados)
-        df["Data"] = pd.to_datetime(df["Data"])
+        st.markdown(f"<div class='saldo-text'>Entradas: R$ {entradas:.2f} | Gastos: R$ {gastos:.2f} | Saldo: R$ {saldo:.2f}</div>", unsafe_allow_html=True)
 
-        periodo = st.date_input("Escolha o intervalo:", [df["Data"].min(), df["Data"].max()])
-        df_periodo = df[(df["Data"] >= pd.to_datetime(periodo[0])) & (df["Data"] <= pd.to_datetime(periodo[1]))]
+        fig_pizza = px.pie(df_filtrado, values='Valor', names='Categoria', title='Distribuição por Categoria')
+        st.plotly_chart(fig_pizza)
 
-        if df_periodo.empty:
-            st.warning("Sem dados para este intervalo.")
-        else:
-            st.dataframe(df_periodo)
-            if st.button("📤 Baixar Relatório em PDF"):
-                pdf_bytes = gerar_pdf(df_periodo.to_dict('records'), periodo=[periodo[0].strftime("%d/%m/%Y"), periodo[1].strftime("%d/%m/%Y")])
-                st.markdown(salvar_pdf_download(pdf_bytes, "relatorio_periodo.pdf"), unsafe_allow_html=True)
+        df_linha = df_filtrado.groupby('Data').sum(numeric_only=True).reset_index()
+        fig_linha = px.line(df_linha, x='Data', y='Valor', title='Evolução Financeira')
+        st.plotly_chart(fig_linha)
+
+# Relatórios
+elif menu == "Relatórios":
+    st.markdown("<h2 class='titulo-claro'>Relatórios em PDF</h2>", unsafe_allow_html=True)
+    periodo = st.date_input("Selecione o período para o relatório", value=(date.today(), date.today()))
+
+    df_periodo = st.session_state['dados'].copy()
+    df_periodo['Data'] = pd.to_datetime(df_periodo['Data'], errors='coerce', dayfirst=True)
+    df_filtrado = df_periodo[(df_periodo['Data'] >= periodo[0]) & (df_periodo['Data'] <= periodo[1])]
+
+    if not df_filtrado.empty and st.button("Gerar Relatório PDF"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt=f"Relatório de {periodo[0].strftime('%d/%m/%Y')} a {periodo[1].strftime('%d/%m/%Y')}", ln=True, align='C')
+        pdf.ln(10)
+
+        for index, row in df_filtrado.iterrows():
+            linha = f"{row['Data'].strftime('%d/%m/%Y')} - {row['Tipo']} - {row['Categoria']} - R$ {row['Valor']:.2f}"
+            pdf.cell(200, 10, txt=linha, ln=True)
+
+        pdf.output("relatorio_periodo.pdf")
+        st.success("Relatório PDF gerado com sucesso!")
+
+# Logo da ÉdenMachine
+st.markdown("""<br><br><div style='text-align:center;'>
+Desenvolvido com carinho pela<br>
+<img src='https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png' class='logo-eden'/>
+</div>""", unsafe_allow_html=True)
