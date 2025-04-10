@@ -153,4 +153,4 @@ try:
         st.warning('Por favor, faça o login para acessar o aplicativo.')
 
 except Exception as e:
-    st.error(f'Ocorreu um erro durante a autenticação: {str(e)}')
+    st.error(f'Ocorreu um erro durante a autenticação. Detalhes do erro: {e}')
