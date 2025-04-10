@@ -115,7 +115,7 @@ if menu == "Resumo Diário":
     valor_saida = st.number_input("Valor do Gasto", min_value=0.0, step=50.0)
     total_saidas = valor_saida
 
-    contas_futuras = st.number_input("Total de Contas Futura (Cartão/Empréstimo)", min_value=0.0, step=50.0)
+    contas_futuras = st.number_input("Total de Contas Futuras (Cartão/Empréstimo)", min_value=0.0, step=50.0)
 
     saldo = total_entradas - total_saidas
 
