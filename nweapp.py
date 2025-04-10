@@ -46,13 +46,12 @@ def set_background_from_url(image_url):
 
 set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
 
-# -------------------- LOGOS --------------------
+# -------------------- LOGO SUPERIOR --------------------
 with st.container():
     st.markdown(
         """
         <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
             <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" width="280">
-            <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="140" style="margin-top: -10px;">
         </div>
         """,
         unsafe_allow_html=True
@@ -81,14 +80,36 @@ if menu == "Resumo Diário":
     st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
 
+    # SALDO COM LETRA BRANCA
     if saldo > 0:
-        st.success(f"Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}")
+        st.markdown(
+            f"""
+            <div style="background-color: rgba(0, 255, 0, 0.2); padding: 10px; border-radius: 8px;">
+                <p style="color: white;"><strong>Você está positiva hoje! 💚 Saldo: R$ {saldo:,.2f}</strong></p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
-        st.error(f"Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}")
+        st.markdown(
+            f"""
+            <div style="background-color: rgba(255, 0, 0, 0.2); padding: 10px; border-radius: 8px;">
+                <p style="color: white;"><strong>Você gastou mais do que ganhou hoje! 💸 Saldo: R$ {saldo:,.2f}</strong></p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         st.caption("Tá plantando dinheiro, né linda?")
     else:
-        st.warning("Zerada. Saldo: R$ 0,00")
+        st.markdown(
+            """
+            <div style="background-color: rgba(255, 255, 0, 0.2); padding: 10px; border-radius: 8px;">
+                <p style="color: white;"><strong>Zerada. Saldo: R$ 0,00</strong></p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         st.caption("Café preto e foco!")
 
 # -------------------- HISTÓRICO MENSAL --------------------
@@ -135,4 +156,12 @@ elif menu == "Ajuda ☕":
 
 # -------------------- RODAPÉ --------------------
 st.markdown("---")
-st.markdown("<center><small>☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small></center>", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" width="140">
+        <small style="color: #ffffffaa;">☕ Desenvolvido com carinho pela <strong>ÉdenMachine</strong></small>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
