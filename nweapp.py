@@ -1,123 +1,32 @@
-import streamlit as st
-from PIL import Image
-from datetime import datetime
-from fpdf import FPDF
+# -------------------- GERAR RELATÓRIO EM PDF --------------------
+if st.button("📄 Gerar Relatório em PDF"):
+    from fpdf import FPDF
+    import base64
 
-# -------------------- CONFIG GERAL --------------------
-st.set_page_config(
-    page_title="Café du Contrôle ☕",
-    page_icon=":coffee:",
-    layout="wide"
-)
+    class PDF(FPDF):
+        def header(self):
+            self.set_font("Arial", "B", 14)
+            self.cell(0, 10, "Café du Contrôle - Relatório do Dia", ln=True, align="C")
 
-# -------------------- FUNÇÃO DE FUNDO --------------------
-def set_background_from_url(image_url):
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("{image_url}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "", 12)
 
-set_background_from_url("https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/bg.png")
-
-# -------------------- ESTILOS --------------------
-st.markdown("""
-    <style>
-        .logo-container img {
-            max-width: 300px;
-        }
-
-        h1, h2, h3 {
-            color: #fefefe;
-            text-shadow: 1px 1px 4px #000000cc;
-        }
-
-        .stMarkdown, .stTextInput > label, .stNumberInput > label {
-            color: #fdfdfd !important;
-        }
-
-        .main > div {
-            background-color: rgba(0,0,0,0.4); 
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .sidebar .sidebar-content {
-            background-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .css-1d391kg { /* Sidebar width fix */
-            width: 250px;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# -------------------- MENU LATERAL --------------------
-with st.sidebar:
-    st.header("☕ Menu")
-    menu = st.radio("Navegar para:", ["Início", "Relatórios futuros", "Sobre"])
-
-# -------------------- CONTEÚDO PRINCIPAL --------------------
-if menu == "Início":
-    # Logo principal
-    st.markdown('<div class="logo-container" style="text-align: center;"><img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/logo-cafe.png" alt="Logo Café du Contrôle"></div>', unsafe_allow_html=True)
-
-    st.header("💰 Entradas")
-    salario = st.number_input("Salário", min_value=0.0, step=100.0)
-    renda_extra = st.number_input("Renda Extra", min_value=0.0, step=50.0)
-    total_entradas = salario + renda_extra
-
-    st.header("💸 Gastos")
-    fixos = st.number_input("Gastos Fixos", min_value=0.0, step=100.0)
-    extras = st.number_input("Gastos Variáveis", min_value=0.0, step=50.0)
-    total_saidas = fixos + extras
-
-    hoje = datetime.now().strftime("%d/%m/%Y")
-
-    st.header("📊 Resumo do Dia")
-    st.markdown(f"**Data:** {hoje}")
-    st.markdown(f"**Total de Entradas:** R$ {total_entradas:,.2f}")
-    st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
-    saldo = total_entradas - total_saidas
-
-    # -------------------- SALDO EM DESTAQUE --------------------
-    saldo_box = f"""
-    <div style="background-color: #fff9e6; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 10px #00000055;">
-        <h3 style="color: #4b2e00; text-align: center;">
-            Saldo do Dia: R$ {saldo:,.2f}
-        </h3>
-        <p style="text-align: center; font-style: italic; color: #4b2e00;">
-    """
+    pdf.cell(0, 10, f"Data: {hoje}", ln=True)
+    pdf.cell(0, 10, f"Total de Entradas: R$ {total_entradas:,.2f}", ln=True)
+    pdf.cell(0, 10, f"Total de Gastos: R$ {total_saidas:,.2f}", ln=True)
+    pdf.cell(0, 10, f"Saldo do Dia: R$ {saldo:,.2f}", ln=True)
 
     if saldo > 0:
-        mensagem = "💚 Você está positiva hoje! <br>Vou começar a te chamar de Senhora... e com voz aveludada!"
+        pdf.multi_cell(0, 10, "Você está positiva hoje!\nVou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
-        mensagem = "💸 Você gastou mais do que ganhou hoje! <br>Tá plantando dinheiro, né linda?"
+        pdf.multi_cell(0, 10, "Você gastou mais do que ganhou hoje!\nTá plantando dinheiro, né linda?")
     else:
-        mensagem = "⚠️ Zerada. Saldo: R$ 0,00 <br>Café preto e foco!"
+        pdf.multi_cell(0, 10, "Zerada. Saldo: R$ 0,00\nCafé preto e foco!")
 
-    saldo_box += mensagem + "</p></div>"
-    st.markdown(saldo_box, unsafe_allow_html=True)
+    # Salvar PDF na memória
+    pdf_output = pdf.output(dest="S").encode("latin-1")
+    b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
 
-# -------------------- SOBRE --------------------
-elif menu == "Sobre":
-    st.subheader("☕ Café du Contrôle")
-    st.markdown("Organize suas finanças de forma acolhedora e divertida. Uma criação com amor da **ÉdenMachine**.")
-    st.markdown("---")
-
-# -------------------- LOGO DA ÉDEN --------------------
-st.markdown("""
-    <div style="position: relative; bottom: 0; width: 100%; text-align: center; margin-top: 50px;">
-        <img src="https://raw.githubusercontent.com/jocianemayaraalves/newapp.py/main/eden-machine-logo-removebg-preview.png" style="max-height: 100px;" />
-        <p style="color: white; font-size: 12px;">Desenvolvido com carinho pela ÉdenMachine</p>
-    </div>
-""", unsafe_allow_html=True)
+    href = f'<a href="data:application/octet-stream;base64,{b64_pdf}" download="relatorio-cafe.pdf">📥 Clique aqui para baixar seu PDF</a>'
+    st.markdown(href, unsafe_allow_html=True)
