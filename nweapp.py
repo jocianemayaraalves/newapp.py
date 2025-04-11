@@ -105,14 +105,28 @@ menu = st.sidebar.radio("Navegar pelo App", ["Resumo Diário", "Relatórios", "G
 # -------------------- RESUMO DIÁRIO --------------------
 if menu == "Resumo Diário":
     st.header("💰 Entradas")
-    tipo_entrada = st.selectbox("Tipo de Entrada", ["PIX", "Dinheiro Físico", "Transferência", "Outros"])
-    valor_entrada = st.number_input("Valor da Entrada", min_value=0.0, step=50.0)
-    total_entradas = valor_entrada
+    entradas = []
+    with st.form("form_entradas"):
+        num_entradas = st.number_input("Quantas entradas deseja adicionar?", min_value=1, max_value=10, value=1)
+        for i in range(int(num_entradas)):
+            tipo = st.selectbox(f"Tipo de Entrada #{i+1}", ["PIX", "Dinheiro Físico", "Transferência", "Outros"], key=f"tipo_{i}")
+            valor = st.number_input(f"Valor da Entrada #{i+1}", min_value=0.0, step=50.0, key=f"valor_entrada_{i}")
+            entradas.append((tipo, valor))
+        submitted_entradas = st.form_submit_button("Registrar Entradas")
+
+    total_entradas = sum([v for t, v in entradas])
 
     st.header("💸 Gastos")
-    descricao_saida = st.text_input("Descrição do Gasto")
-    valor_saida = st.number_input("Valor do Gasto", min_value=0.0, step=50.0)
-    total_saidas = valor_saida
+    saidas = []
+    with st.form("form_saidas"):
+        num_saidas = st.number_input("Quantos gastos deseja adicionar?", min_value=1, max_value=10, value=1)
+        for i in range(int(num_saidas)):
+            desc = st.text_input(f"Descrição do Gasto #{i+1}", key=f"desc_saida_{i}")
+            valor = st.number_input(f"Valor do Gasto #{i+1}", min_value=0.0, step=50.0, key=f"valor_saida_{i}")
+            saidas.append((desc, valor))
+        submitted_saidas = st.form_submit_button("Registrar Gastos")
+
+    total_saidas = sum([v for d, v in saidas])
 
     contas_futuras = st.number_input("Total de Contas Futuras (Cartão/Empréstimo)", min_value=0.0, step=50.0)
 
@@ -124,7 +138,7 @@ if menu == "Resumo Diário":
     st.markdown(f"**Total de Gastos:** R$ {total_saidas:,.2f}")
 
     if saldo > 0:
-        st.success("Você está positiva hoje! 💚")
+        st.success(f"Você está positiva hoje! 💚")
         st.caption("Vou começar a te chamar de Senhora... e com voz aveludada!")
     elif saldo < 0:
         st.error("Você gastou mais do que ganhou hoje! 💸")
@@ -137,7 +151,9 @@ if menu == "Resumo Diário":
 
     if st.button("💾 Salvar relatório do dia"):
         st.success("Relatório salvo com sucesso!")
-        salvar_relatorio(data_lancamento, total_entradas, tipo_entrada, descricao_saida, total_saidas, saldo, contas_futuras)
+        for tipo, valor in entradas:
+            for desc, val in saidas:
+                salvar_relatorio(data_lancamento, valor, tipo, desc, val, valor - val, contas_futuras)
 
 # -------------------- RELATÓRIOS --------------------
 elif menu == "Relatórios":
@@ -159,28 +175,22 @@ elif menu == "Gerar PDF":
         df = pd.DataFrame(relatorios, columns=["ID", "Data", "Entradas", "Tipo Entrada", "Descrição Saída", "Saídas", "Saldo", "Contas Futuras"])
         df["Data"] = pd.to_datetime(df["Data"])
 
-        data_inicial = st.date_input("Data inicial", value=df["Data"].min())
-        data_final = st.date_input("Data final", value=df["Data"].max())
+        data_inicial = st.date_input("Data inicial", value=df['Data'].min())
+        data_final = st.date_input("Data final", value=df['Data'].max())
 
         filtro = (df["Data"] >= pd.to_datetime(data_inicial)) & (df["Data"] <= pd.to_datetime(data_final))
         df_filtrado = df[filtro]
 
         st.subheader("Gráficos")
         if not df_filtrado.empty:
-            fig1, ax1 = plt.subplots()
-            df_filtrado.plot(x="Data", y=["Entradas", "Saídas", "Saldo"], kind="line", ax=ax1)
-            st.pyplot(fig1)
+            st.pyplot(df_filtrado.plot(x="Data", y=["Entradas", "Saídas", "Saldo"], kind="line").figure)
+            st.pyplot(df_filtrado[["Entradas", "Saídas"]].sum().plot.pie(autopct='%1.1f%%').figure)
 
-            fig2, ax2 = plt.subplots()
-            df_filtrado[["Entradas", "Saídas"]].sum().plot.pie(autopct='%1.1f%%', ax=ax2)
-            st.pyplot(fig2)
+        st.subheader("Informações Inteligentes")
+        st.markdown(f"- **Média de saldo diário:** R$ {df_filtrado['Saldo'].mean():,.2f}")
+        st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['Saldo'].idxmax()]['Data'].strftime('%d/%m/%Y')}")
+        st.markdown(f"- **Maior gasto:** R$ {df_filtrado['Saídas'].max():,.2f}")
 
-            st.subheader("Informações Inteligentes")
-            st.markdown(f"- **Média de saldo diário:** R$ {df_filtrado['Saldo'].mean():,.2f}")
-            st.markdown(f"- **Dia mais lucrativo:** {df_filtrado.loc[df_filtrado['Saldo'].idxmax()]['Data'].strftime('%d/%m/%Y')}")
-            st.markdown(f"- **Maior gasto:** R$ {df_filtrado['Saídas'].max():,.2f}")
-        else:
-            st.warning("Nenhum dado dentro do período selecionado.")
     else:
         st.warning("Nenhum dado disponível para gerar PDF.")
 
